@@ -66,15 +66,32 @@ class Settings(BaseSettings):
 
     @property
     def active_llm_base_url(self) -> str:
-        return self.llm_base_url.strip()
+        if self.llm_base_url.strip():
+            return self.llm_base_url.strip()
+        return {
+            "gemini": "https://generativelanguage.googleapis.com/v1beta/openai/",
+            "groq": "https://api.groq.com/openai/v1",
+        }.get(self.provider, "")
 
     @property
     def agent_model_name(self) -> str:
-        return self.llm_agent_model or self.agent_model or self.openai_agent_model
+        if self.llm_agent_model:
+            return self.llm_agent_model
+        default = {
+            "gemini": "gemini-flash-latest",
+            "groq": "llama-3.3-70b-versatile",
+        }.get(self.provider)
+        return default or self.agent_model or self.openai_agent_model
 
     @property
     def guard_model_name(self) -> str:
-        return self.llm_guard_model or self.guard_model or self.openai_guard_model
+        if self.llm_guard_model:
+            return self.llm_guard_model
+        default = {
+            "gemini": "gemini-flash-lite-latest",
+            "groq": "llama-3.1-8b-instant",
+        }.get(self.provider)
+        return default or self.guard_model or self.openai_guard_model
 
     @property
     def smtp_configured(self) -> bool:

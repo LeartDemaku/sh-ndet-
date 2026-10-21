@@ -92,13 +92,13 @@ për chat completions. Vendos vetëm te `backend/.env` (kurrë në Git):
 ```env
 LLM_PROVIDER=gemini
 LLM_API_KEY=...
-LLM_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai/
-LLM_AGENT_MODEL=gemini-flash-latest
-LLM_GUARD_MODEL=gemini-flash-lite-latest
 ```
 
-Për Groq: `LLM_PROVIDER=groq`, `LLM_BASE_URL=https://api.groq.com/openai/v1`,
-`LLM_AGENT_MODEL=llama-3.3-70b-versatile`, `LLM_GUARD_MODEL=llama-3.1-8b-instant`.
+Mjaftojnë këto dy rreshta; URL-ja dhe modelet kanë vlera parazgjedhur
+(`gemini-flash-latest` / `gemini-flash-lite-latest`). Për Groq përdor
+`LLM_PROVIDER=groq`; modelet parazgjedhur janë `llama-3.3-70b-versatile` /
+`llama-3.1-8b-instant`. Mund t'i mbivendosësh me `LLM_BASE_URL`,
+`LLM_AGENT_MODEL` dhe `LLM_GUARD_MODEL`.
 Këto janë për **testim lokal**; për prodhim zgjidh një plan me DPA dhe politika
 përpunimi të dhënash shëndetësore. Pas ndryshimit të `.env`, rinis API-n.
 
@@ -132,7 +132,7 @@ Në CI (GitHub Actions, rruga `/home/runner/work/...`) analyze kalon normalisht.
 |---|---|
 | PostgreSQL 16.15 + pgvector 0.8.7 + Redis 7.4 | ✅ `docker compose up -d db redis` |
 | Migrimet `0001_init` + `0002_email_verification` | ✅ 10 tabela + `alembic_version`, indeks HNSW |
-| `pytest -q` | ✅ 24 passed |
+| `pytest -q` | ✅ 26 passed |
 | Regjistrim + verifikim emaili | ✅ kod 6-shifror; llogaria aktivizohet vetëm pas verifikimit |
 | `python -m eval.annex_a --deterministic` | ✅ 4 KALON / 0 DËSHTON (2 manuale, 13 skip) |
 | Smoke end-to-end (`scripts/smoke_e2e.ps1`) | ✅ 40 OK / 0 FAIL |
