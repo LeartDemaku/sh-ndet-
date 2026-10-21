@@ -80,7 +80,7 @@ njerëzore (klinike, ligjore, DPO) që kërkon lista e mësipërme.
 | Test ngarkese k6 | ⏳ k6 mungon | `loadtest/chat.js` |
 | `pytest -q` | ✅ 28 passed | |
 | `flutter analyze` | ✅ No issues found | |
-| `flutter test` | ✅ 33/33 | |
+| `flutter test` | ✅ 35/35 | |
 | Pamja light/dark | ✅ zgjedhësi te Profili; e ndritshmja si parazgjedhje, ruhet pas rihapjes | `theme_test.dart` · `theme_mode.dart` |
 | Përshëndetja e Ballinës | ✅ sipas orës së Kosovës (03–11, 11–18, 18–03), me DST automatik | `greeting_test.dart` · `kosovo_time.dart` |
 

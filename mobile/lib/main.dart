@@ -27,7 +27,7 @@ class EmergencyFab extends StatelessWidget {
     foregroundColor: ShendetColors.onEmergency,
     elevation: 4,
     tooltip: 'Emergjencë, telefono 194',
-    onPressed: () => context.go('/emergency'),
+    onPressed: () => context.push('/emergency'),
     icon: const Icon(Icons.emergency_rounded),
     label: const Text(
       '194',

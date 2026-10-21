@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/theme/app_theme.dart';
@@ -89,7 +90,14 @@ class EmergencyPage extends StatelessWidget {
                   foregroundColor: ShendetColors.onEmergency,
                   minimumSize: const Size.fromHeight(kTouchTarget),
                 ),
-                onPressed: () => Navigator.of(context).maybePop(),
+                onPressed: () {
+                  if (context.canPop()) {
+                    context.pop();
+                  } else {
+                    // Hyrje direkte me link: kthehu te platforma, jo në një ekran bosh.
+                    context.go('/home');
+                  }
+                },
                 child: const Text('Kthehu'),
               ),
               const SizedBox(height: Gap.s),
