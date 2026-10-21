@@ -1,5 +1,4 @@
-<<<<<<< HEAD
-# .env nuk shkon kurrë në Git (edhe në nëndosje)
+# Secrets and environment files
 .env
 .env.*
 !.env.example
@@ -13,6 +12,8 @@ secrets/
 service-account*.json
 GOOGLE_APPLICATION_CREDENTIALS*
 credentials*.json
+
+# Python
 .venv/
 venv/
 __pycache__/
@@ -28,30 +29,19 @@ mobile/.flutter-plugins*
 mobile/android/.gradle/
 mobile/ios/Pods/
 
-# Skedarë të tjerë
+# Logs and IDE files
 *.log
 .idea/
 .vscode/
 .DS_Store
-service-account*.json
-GOOGLE_APPLICATION_CREDENTIALS*
-=======
-# Build and Release Folders
+
+# Build and release folders
 bin-debug/
 bin-release/
 [Oo]bj/
 [Bb]in/
-
-# Other files and folders
 .settings/
-
-# Executables
 *.swf
 *.air
 *.ipa
 *.apk
-
-# Project files, i.e. `.project`, `.actionScriptProperties` and `.flexProperties`
-# should NOT be excluded as they contain compiler settings and other important
-# information for Eclipse / Flash Builder.
->>>>>>> e8a1764e4c156dc26d1f5be202e615290287f5ce

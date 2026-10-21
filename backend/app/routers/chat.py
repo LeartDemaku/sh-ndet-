@@ -7,6 +7,7 @@ from agents import Runner
 from agents.exceptions import InputGuardrailTripwireTriggered
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
+from openai import RateLimitError
 from openai.types.responses import ResponseTextDeltaEvent
 from pydantic import BaseModel, Field
 from sqlalchemy import select
@@ -36,6 +37,36 @@ class ChatIn(BaseModel):
 
 def sse(event: str, data: dict) -> str:
     return f"event: {event}\ndata: {json.dumps(data, ensure_ascii=False)}\n\n"
+
+
+def llm_error_message(exc: Exception, country: str, app_env: str) -> tuple[str, str]:
+    """Kthen një kod të qëndrueshëm dhe një mesazh të sigurt për përdoruesin."""
+    code = getattr(exc, "code", None)
+    body = getattr(exc, "body", None)
+    if isinstance(body, dict):
+        error = body.get("error")
+        if isinstance(error, dict):
+            code = error.get("code") or code
+    text = str(exc).lower()
+    if code in {"insufficient_quota", "credit_balance_exhausted"} or "no credits" in text:
+        if app_env == "production":
+            message = (
+                "Shërbimi i AI nuk është i disponueshëm për momentin. "
+                "Provo përsëri më vonë. "
+                f"Nëse është urgjente, telefono {emergency_number(country)}."
+            )
+        else:
+            message = (
+                "Shërbimi i AI nuk ka kredi aktive në llogarinë OpenAI. "
+                "Shto kredi dhe provo përsëri. "
+                f"Nëse është urgjente, telefono {emergency_number(country)}."
+            )
+        return "ai_no_credits", message
+    return (
+        "ai_unavailable",
+        "Shërbimi i AI është i zënë tani. Provo përsëri pas pak. "
+        f"Nëse është urgjente, telefono {emergency_number(country)}.",
+    )
 
 
 async def _ensure_conversation(user_id: uuid.UUID, conv_id: uuid.UUID | None) -> uuid.UUID:
@@ -114,6 +145,12 @@ async def _events(user: User, conv_id: uuid.UUID, history: list[dict], text: str
         if keep_history:
             await _save(conv_id, "assistant", msg, safety="blocked")
         yield sse("blocked", {"message": msg})
+        yield sse("done", {})
+        return
+    except RateLimitError as exc:
+        logger.warning("agent_rate_limited: %s", exc)
+        code, message = llm_error_message(exc, user.country, get_settings().app_env)
+        yield sse("error", {"message": message, "code": code})
         yield sse("done", {})
         return
     except Exception:
