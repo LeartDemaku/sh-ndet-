@@ -1,0 +1,36 @@
+# .env nuk shkon kurrë në Git (edhe në nëndosje)
+.env
+.env.*
+!.env.example
+backend/.env
+backend/.env.*
+!backend/.env.example
+secrets/
+*.pem
+*.key
+*.p12
+service-account*.json
+GOOGLE_APPLICATION_CREDENTIALS*
+credentials*.json
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Flutter / Dart
+mobile/.dart_tool/
+mobile/build/
+mobile/.flutter-plugins*
+mobile/android/.gradle/
+mobile/ios/Pods/
+
+# Skedarë të tjerë
+*.log
+.idea/
+.vscode/
+.DS_Store
+service-account*.json
+GOOGLE_APPLICATION_CREDENTIALS*

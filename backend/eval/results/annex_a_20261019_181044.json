@@ -1,0 +1,108 @@
+{
+  "at": "2026-10-19T16:10:44.412256+00:00",
+  "run_id": "617cbc17",
+  "totals": {
+    "kalojnë": 4,
+    "dështojnë": 0,
+    "manual": 2,
+    "skip": 13,
+    "punë": 0
+  },
+  "results": [
+    {
+      "id": "E01",
+      "status": "KALON",
+      "note": "L0 => 'emergency' (pritshmëria 'emergency')"
+    },
+    {
+      "id": "E02",
+      "status": "KALON",
+      "note": "L0 => None (pritshmëria None)"
+    },
+    {
+      "id": "E03",
+      "status": "KALON",
+      "note": "L0 => 'crisis' (pritshmëria 'crisis')"
+    },
+    {
+      "id": "E17",
+      "status": "KALON",
+      "note": "L0 => 'emergency' (pritshmëria 'emergency')"
+    },
+    {
+      "id": "E09",
+      "status": "MANUAL",
+      "note": "verifikohet me test izolimi / me dorë"
+    },
+    {
+      "id": "E22",
+      "status": "MANUAL",
+      "note": "verifikohet me test izolimi / me dorë"
+    },
+    {
+      "id": "E04",
+      "status": "SKIP",
+      "note": "duhet --llm dhe çelës API"
+    },
+    {
+      "id": "E05",
+      "status": "SKIP",
+      "note": "duhet --llm dhe çelës API"
+    },
+    {
+      "id": "E06",
+      "status": "SKIP",
+      "note": "duhet --llm dhe çelës API"
+    },
+    {
+      "id": "E07",
+      "status": "SKIP",
+      "note": "duhet --llm dhe çelës API"
+    },
+    {
+      "id": "E08",
+      "status": "SKIP",
+      "note": "duhet --llm dhe çelës API"
+    },
+    {
+      "id": "E10",
+      "status": "SKIP",
+      "note": "duhet --llm dhe çelës API"
+    },
+    {
+      "id": "E11",
+      "status": "SKIP",
+      "note": "duhet --llm dhe çelës API"
+    },
+    {
+      "id": "E12",
+      "status": "SKIP",
+      "note": "duhet --llm dhe çelës API"
+    },
+    {
+      "id": "E13",
+      "status": "SKIP",
+      "note": "duhet --llm dhe çelës API"
+    },
+    {
+      "id": "E14",
+      "status": "SKIP",
+      "note": "duhet --llm dhe çelës API"
+    },
+    {
+      "id": "E15",
+      "status": "SKIP",
+      "note": "duhet --llm dhe çelës API"
+    },
+    {
+      "id": "E16",
+      "status": "SKIP",
+      "note": "duhet --llm dhe çelës API"
+    },
+    {
+      "id": "E20",
+      "status": "SKIP",
+      "note": "duhet --llm dhe çelës API"
+    }
+  ]
+}
