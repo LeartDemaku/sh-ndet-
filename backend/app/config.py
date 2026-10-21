@@ -13,6 +13,17 @@ class Settings(BaseSettings):
     openai_api_key: str = ""
     agent_model: str = ""      # bosh = modeli parazgjedhur i SDK-së
     guard_model: str = ""      # model i vogël/i shpejtë për kontrollet
+    openai_agent_model: str = "gpt-5-mini"
+    openai_guard_model: str = "gpt-5-nano"
+
+    # Ofrues alternativ OpenAI-compatible (Groq, Gemini, etj.).
+    # Për OpenAI: LLM_PROVIDER=openai dhe OPENAI_API_KEY.
+    llm_provider: str = "openai"
+    llm_api_key: str = ""
+    llm_base_url: str = ""
+    llm_agent_model: str = ""
+    llm_guard_model: str = ""
+
     embedding_model: str = ""
     embedding_dim: int = 1536
 
@@ -42,6 +53,28 @@ class Settings(BaseSettings):
     @property
     def encryption_keys(self) -> list[str]:
         return [k.strip() for k in self.field_encryption_keys.split(",") if k.strip()]
+
+    @property
+    def provider(self) -> str:
+        return (self.llm_provider or "openai").strip().lower()
+
+    @property
+    def active_llm_key(self) -> str:
+        if self.provider == "openai":
+            return self.openai_api_key
+        return self.llm_api_key
+
+    @property
+    def active_llm_base_url(self) -> str:
+        return self.llm_base_url.strip()
+
+    @property
+    def agent_model_name(self) -> str:
+        return self.llm_agent_model or self.agent_model or self.openai_agent_model
+
+    @property
+    def guard_model_name(self) -> str:
+        return self.llm_guard_model or self.guard_model or self.openai_guard_model
 
     @property
     def smtp_configured(self) -> bool:

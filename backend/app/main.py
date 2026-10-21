@@ -1,9 +1,15 @@
 import logging
 from contextlib import asynccontextmanager
 
-from agents import set_default_openai_key, set_tracing_disabled
+from agents import (
+    set_default_openai_api,
+    set_default_openai_client,
+    set_default_openai_key,
+    set_tracing_disabled,
+)
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from openai import AsyncOpenAI
 
 from app.config import get_settings
 from app.routers import actions, auth, chat, profile
@@ -14,8 +20,25 @@ settings = get_settings()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    if settings.openai_api_key:
-        set_default_openai_key(settings.openai_api_key)   # .env nuk shkon në os.environ
+    if settings.provider == "openai":
+        if settings.openai_api_key:
+            set_default_openai_key(settings.openai_api_key)   # .env nuk shkon në os.environ
+        set_default_openai_api("responses")
+    elif settings.active_llm_key and settings.active_llm_base_url:
+        set_default_openai_client(
+            AsyncOpenAI(
+                api_key=settings.active_llm_key,
+                base_url=settings.active_llm_base_url,
+                max_retries=1,
+            ),
+            use_for_tracing=False,
+        )
+        set_default_openai_api("chat_completions")
+    else:
+        logging.getLogger(__name__).error(
+            "LLM provider %s is missing LLM_API_KEY or LLM_BASE_URL",
+            settings.provider,
+        )
     set_tracing_disabled(True)   # bisedat shëndetësore nuk dërgohen te trace-et e SDK-së
     yield
 

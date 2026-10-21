@@ -57,8 +57,8 @@ def llm_error_message(exc: Exception, country: str, app_env: str) -> tuple[str, 
             )
         else:
             message = (
-                "Shërbimi i AI nuk ka kredi aktive në llogarinë OpenAI. "
-                "Shto kredi dhe provo përsëri. "
+                "Shërbimi i AI nuk ka kuotë ose kredi aktive në llogarinë e ofruesit. "
+                "Kontrollo llogarinë dhe provo përsëri. "
                 f"Nëse është urgjente, telefono {emergency_number(country)}."
             )
         return "ai_no_credits", message

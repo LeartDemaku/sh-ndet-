@@ -77,7 +77,7 @@ njerëzore (klinike, ligjore, DPO) që kërkon lista e mësipërme.
 | Migrimet + `vector` + HNSW | ✅ `0001_init` + `0002_email_verification` | `alembic upgrade head` |
 | Build i imazhit Docker | ⏳ në progres | `docker compose build api` |
 | Test ngarkese k6 | ⏳ k6 mungon | `loadtest/chat.js` |
-| `pytest -q` | ✅ 17 passed | |
+| `pytest -q` | ✅ 24 passed | |
 | `flutter analyze` | ✅ No issues found | |
 | `flutter test` | ✅ 33/33 | |
 | Pamja light/dark | ✅ zgjedhësi te Profili; e ndritshmja si parazgjedhje, ruhet pas rihapjes | `theme_test.dart` · `theme_mode.dart` |

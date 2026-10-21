@@ -84,6 +84,24 @@ Në një terminal tjetër: `arq app.worker.WorkerSettings` (kujtesat + njoftimet
 > dhe rinis terminalin/API-n. `EMBEDDING_MODEL=text-embedding-3-small` duhet të përputhet
 > me `EMBEDDING_DIM=1536` dhe me `Vector(1536)` te `models.py`.
 
+### Ofrues alternativ për zhvillim (Groq/Gemini)
+
+Nëse llogaria OpenAI nuk ka kredi API, backend-i mbështet çdo endpoint OpenAI-compatible
+për chat completions. Vendos vetëm te `backend/.env` (kurrë në Git):
+
+```env
+LLM_PROVIDER=gemini
+LLM_API_KEY=...
+LLM_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai/
+LLM_AGENT_MODEL=gemini-flash-latest
+LLM_GUARD_MODEL=gemini-flash-lite-latest
+```
+
+Për Groq: `LLM_PROVIDER=groq`, `LLM_BASE_URL=https://api.groq.com/openai/v1`,
+`LLM_AGENT_MODEL=llama-3.3-70b-versatile`, `LLM_GUARD_MODEL=llama-3.1-8b-instant`.
+Këto janë për **testim lokal**; për prodhim zgjidh një plan me DPA dhe politika
+përpunimi të dhënash shëndetësore. Pas ndryshimit të `.env`, rinis API-n.
+
 ## ⚠️ Shënim për Windows: rruga e projektit
 
 Emri i dosjes **"Shëndet+"** përmban "ë", që është shenjë jo-ASCII. Dart SDK-ja
@@ -108,13 +126,13 @@ Emri i produktit mbetet **Shëndet+** kudo: në API, në promptet, në bazën e 
 në UI dhe në paketën Flutter (`shendetplus`). Ndryshohet vetëm rruga në disk.
 Në CI (GitHub Actions, rruga `/home/runner/work/...`) analyze kalon normalisht.
 
-## Gjendja e verifikuar (20.10.2026)
+## Gjendja e verifikuar (21.10.2026)
 
 | Kontroll | Rezultat |
 |---|---|
 | PostgreSQL 16.15 + pgvector 0.8.7 + Redis 7.4 | ✅ `docker compose up -d db redis` |
 | Migrimet `0001_init` + `0002_email_verification` | ✅ 10 tabela + `alembic_version`, indeks HNSW |
-| `pytest -q` | ✅ 17 passed |
+| `pytest -q` | ✅ 24 passed |
 | Regjistrim + verifikim emaili | ✅ kod 6-shifror; llogaria aktivizohet vetëm pas verifikimit |
 | `python -m eval.annex_a --deterministic` | ✅ 4 KALON / 0 DËSHTON (2 manuale, 13 skip) |
 | Smoke end-to-end (`scripts/smoke_e2e.ps1`) | ✅ 40 OK / 0 FAIL |

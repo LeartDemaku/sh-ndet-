@@ -27,7 +27,7 @@ _checker = Agent(
     name="Kontrolli i fushëveprimit",
     instructions=GUARD_PROMPT,
     output_type=ScopeVerdict,
-    model=get_settings().guard_model or None,
+    model=get_settings().guard_model_name or None,
 )
 
 

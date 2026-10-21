@@ -8,7 +8,7 @@ def test_quota_error_is_actionable_in_development():
     code, message = llm_error_message(exc, "XK", "development")
     assert code == "ai_no_credits"
     assert "kredi" in message
-    assert "OpenAI" in message
+    assert "ofruesit" in message
     assert "194" in message
     assert "112" not in message
 

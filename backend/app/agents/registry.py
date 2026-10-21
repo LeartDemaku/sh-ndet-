@@ -11,7 +11,7 @@ from app.agents.tools import (
 from app.config import get_settings
 from app.safety.guardrails import scope_guardrail
 
-MODEL = get_settings().agent_model or None   # None = modeli parazgjedhur i SDK-së
+MODEL = get_settings().agent_model_name or None   # None = modeli parazgjedhur i SDK-së
 
 symptom_agent = Agent[AppContext](
     name="Orientues simptomash",
