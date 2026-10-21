@@ -171,10 +171,11 @@ Check 'mesazhi i asistences ka safety_level=emergency' ($null -ne $conv1 -and ($
 
 # ---------------------------------------------------------------
 Write-Host ""
-Write-Host "4) SSE - rruga jo-emergjente (pa OPENAI_API_KEY => gabim i kontrolluar)"
+Write-Host "4) SSE - rruga jo-emergjente (pergjigje LLM ose gabim i kontrolluar)"
 $norm = Invoke-Api POST '/v1/chat/stream' @{ message = 'Cfare eshte diabeti?' } $token
 Check 'POST /v1/chat/stream -> 200' ($norm.Status -eq 200) ("status=" + $norm.Status)
-Check 'event: done edhe ne gabim' ($norm.Content -match 'event: done')
+Check 'pergjigje ose gabim i kontrolluar' (($norm.Content -match 'event: token') -or ($norm.Content -match 'event: blocked') -or ($norm.Content -match 'event: error'))
+Check 'event: done' ($norm.Content -match 'event: done')
 Check 'pa crash (nuk kthen 500)' ($norm.Status -ne 500)
 
 # ---------------------------------------------------------------

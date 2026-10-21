@@ -50,15 +50,25 @@ async def ingest(title: str, source: str, url: str, lang: str, text: str,
 
 
 async def search_knowledge(query: str, lang: str = "sq", k: int = 4) -> list[dict]:
-    qvec = (await embed([query]))[0]
-    stmt = (
-        select(KnowledgeChunk)
-        .where(KnowledgeChunk.reviewed_at.is_not(None),
-               KnowledgeChunk.lang.in_([lang, "en"]))
-        .order_by(KnowledgeChunk.embedding.cosine_distance(qvec))
-        .limit(k)
-    )
     async with SessionLocal() as db:
+        # Pa përmbajtje të rishikuar, mos thirr fare API-n e embeddings:
+        # kur baza është bosh kjo vetëm shton vonesë dhe kosto.
+        has_rows = await db.scalar(
+            select(KnowledgeChunk.id)
+            .where(KnowledgeChunk.reviewed_at.is_not(None),
+                   KnowledgeChunk.lang.in_([lang, "en"]))
+            .limit(1)
+        )
+        if has_rows is None:
+            return []
+        qvec = (await embed([query]))[0]
+        stmt = (
+            select(KnowledgeChunk)
+            .where(KnowledgeChunk.reviewed_at.is_not(None),
+                   KnowledgeChunk.lang.in_([lang, "en"]))
+            .order_by(KnowledgeChunk.embedding.cosine_distance(qvec))
+            .limit(k)
+        )
         rows = (await db.scalars(stmt)).all()
     return [{"title": r.title, "source": r.source, "url": r.url, "excerpt": r.text[:700]}
             for r in rows]

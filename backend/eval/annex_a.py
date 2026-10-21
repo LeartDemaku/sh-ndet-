@@ -20,6 +20,7 @@ import json
 import os
 import re
 import sys
+import time
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
@@ -83,12 +84,14 @@ def run_api(base_url: str, token: str | None) -> list[dict]:
         else:
             out.append(_result("E18", "SKIP", "mungon token"))
 
-        # E19: 21 kërkesa brenda një minute -> 429 me Retry-After
+        # E19: 21 kërkesa brenda një minute -> 429 me Retry-After.
+        # Mesazh emergjence: kalon nga L0 pa model, pra teston vetëm rate limitin
+        # dhe nuk harxhon kuotë LLM për 20 kërkesa.
         if token:
             codes = []
             for _ in range(21):
                 r = c.post("/v1/chat/stream",
-                           json={"message": "Kam dhimbje koke prej dy ditësh."},
+                           json={"message": "Nuk mund të marr frymë."},
                            headers={"Authorization": f"Bearer {token}"})
                 codes.append(r.status_code)
             hit429 = 429 in codes
@@ -108,14 +111,21 @@ def run_api(base_url: str, token: str | None) -> list[dict]:
     return out
 
 
-def run_llm(base_url: str, token: str) -> list[dict]:
-    """Dërgon çdo pyetje LLM te /v1/chat/stream dhe kthen ngjarjet + kontrollin automatik."""
+def run_llm(base_url: str, token: str, delay: float = 0.0) -> list[dict]:
+    """Dërgon çdo pyetje LLM te /v1/chat/stream dhe kthen ngjarjet + kontrollin automatik.
+
+    `delay` ndihmon në kuotat falas (p.sh. Gemini 15 kërkesa/minutë).
+    """
     import httpx
 
     out: list[dict] = []
+    first = True
     for case_id, text, expect, layer, kind in CASES:
         if kind != "llm":
             continue
+        if not first and delay > 0:
+            time.sleep(delay)
+        first = False
         full, events = "", []
         try:
             with httpx.Client(base_url=base_url, timeout=90) as c:
@@ -162,6 +172,8 @@ def main() -> int:
                    help="vetëm rastet deterministike (pa infrastrukturë)")
     p.add_argument("--api", action="store_true", help="përfshi rastet API (kërkon serverin)")
     p.add_argument("--llm", action="store_true", help="përfshi rastet LLM (kërkon token)")
+    p.add_argument("--llm-delay", type=float, default=0.0,
+                   help="sekonda pritje mes rasteve LLM (për kuota falas)")
     p.add_argument("--base-url", default="http://127.0.0.1:8000")
     p.add_argument("--token", default=os.getenv("TOKEN", ""))
     args = p.parse_args()
@@ -171,13 +183,15 @@ def main() -> int:
         results.append(_result(case_id, "MANUAL",
                                "verifikohet me test izolimi / me dorë"))
 
+    if args.llm and not args.token:
+        print("LLM kërkon --token ose TOKEN në ambient.", file=sys.stderr)
+        return 2
+    # LLM-ja ekzekutohet para testit të rate limitit: E19 e mbush limitin
+    # qëllimisht dhe do t'i bllokonte rastet LLM që vijnë menjëherë pas.
+    if args.llm:
+        results += run_llm(args.base_url, args.token, args.llm_delay)
     if args.api or args.llm:
         results += run_api(args.base_url, args.token or None)
-    if args.llm:
-        if not args.token:
-            print("LLM kërkon --token ose TOKEN në ambient.", file=sys.stderr)
-            return 2
-        results += run_llm(args.base_url, args.token)
     if not (args.api or args.llm):
         for case_id, _t, _e, _l, kind in CASES:
             if kind == "llm" and not any(r["id"] == case_id for r in results):

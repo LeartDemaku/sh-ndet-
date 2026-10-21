@@ -58,7 +58,7 @@
 
 ---
 
-## Statusi teknik i verifikimit (19.10.2026)
+## Statusi teknik i verifikimit (21.10.2026)
 
 Këto janë kontrolle teknike në mjedisin e zhvillimit. **Nuk zëvendësojnë** nënshkrimet
 njerëzore (klinike, ligjore, DPO) që kërkon lista e mësipërme.
@@ -66,7 +66,8 @@ njerëzore (klinike, ligjore, DPO) që kërkon lista e mësipërme.
 | Kontrolli | Statusi | Dëshmia |
 |---|---|---|
 | Aneksi A — pjesa deterministike | ✅ 4 KALON / 0 DËSHTON | `python -m eval.annex_a --deterministic` |
-| Aneksi A — me LLM | ⏳ çelësi u vendos; pret kredi API (429 `insufficient_quota`) | `python -m eval.annex_a --llm` |
+| Aneksi A — me LLM | ✅ 7 KALON / 0 DËSHTON / 13 PUNË (13 kërkojnë rishikim klinik) | `python -m eval.annex_a --llm --llm-delay 12 --token …` (Gemini falas) |
+| Chat me LLM + triazh + kujtesa | ✅ përgjigje, kartë triazhi, propozim dhe konfirmim kujtese (200) | E2E me `gemini-3.5-flash-lite`; guardrail bllokoi kërkesën e recetës |
 | Rate limit 20/min | ✅ 20 OK / 5 × 429 | test i veçantë |
 | Izolimi mes përdoruesve | ✅ 404 për bisedë të huaj | `smoke_e2e.ps1` hapi 6 |
 | Eksport + fshirje llogarie | ✅ përfshirë 401 pas fshirjes | `smoke_e2e.ps1` hapi 7 |
@@ -77,7 +78,7 @@ njerëzore (klinike, ligjore, DPO) që kërkon lista e mësipërme.
 | Migrimet + `vector` + HNSW | ✅ `0001_init` + `0002_email_verification` | `alembic upgrade head` |
 | Build i imazhit Docker | ⏳ në progres | `docker compose build api` |
 | Test ngarkese k6 | ⏳ k6 mungon | `loadtest/chat.js` |
-| `pytest -q` | ✅ 26 passed | |
+| `pytest -q` | ✅ 28 passed | |
 | `flutter analyze` | ✅ No issues found | |
 | `flutter test` | ✅ 33/33 | |
 | Pamja light/dark | ✅ zgjedhësi te Profili; e ndritshmja si parazgjedhje, ruhet pas rihapjes | `theme_test.dart` · `theme_mode.dart` |

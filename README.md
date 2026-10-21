@@ -65,7 +65,7 @@ cd backend
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
-copy .env.example .env          # pastaj plotëso OPENAI_API_KEY
+copy .env.example .env          # pastaj plotëso OPENAI_API_KEY ose LLM_PROVIDER + LLM_API_KEY
 docker compose up -d db redis
 alembic upgrade head
 uvicorn app.main:app --reload
@@ -102,6 +102,11 @@ Mjaftojnë këto dy rreshta; URL-ja dhe modelet kanë vlera parazgjedhur
 Këto janë për **testim lokal**; për prodhim zgjidh një plan me DPA dhe politika
 përpunimi të dhënash shëndetësore. Pas ndryshimit të `.env`, rinis API-n.
 
+Në këtë mjedis u provua `gemini-3.5-flash-lite`. Kuota falas e Gemini është e
+kufizuar (rreth 15 kërkesa/minutë për këtë model); nëse biseda është shumë e
+shpejtë, API kthen një mesazh të kontrolluar “AI i zënë” në vend që të shembet.
+Për përdorim real me shumë përdorues nevojitet plan me pagesë dhe DPA.
+
 ## ⚠️ Shënim për Windows: rruga e projektit
 
 Emri i dosjes **"Shëndet+"** përmban "ë", që është shenjë jo-ASCII. Dart SDK-ja
@@ -132,17 +137,18 @@ Në CI (GitHub Actions, rruga `/home/runner/work/...`) analyze kalon normalisht.
 |---|---|
 | PostgreSQL 16.15 + pgvector 0.8.7 + Redis 7.4 | ✅ `docker compose up -d db redis` |
 | Migrimet `0001_init` + `0002_email_verification` | ✅ 10 tabela + `alembic_version`, indeks HNSW |
-| `pytest -q` | ✅ 26 passed |
+| `pytest -q` | ✅ 28 passed |
 | Regjistrim + verifikim emaili | ✅ kod 6-shifror; llogaria aktivizohet vetëm pas verifikimit |
 | `python -m eval.annex_a --deterministic` | ✅ 4 KALON / 0 DËSHTON (2 manuale, 13 skip) |
-| Smoke end-to-end (`scripts/smoke_e2e.ps1`) | ✅ 40 OK / 0 FAIL |
+| Smoke end-to-end (`scripts/smoke_e2e.ps1`) | ✅ 41 OK / 0 FAIL |
 | `flutter analyze` | ✅ No issues found |
 | `flutter test` | ✅ 33/33 |
 | Pamja light/dark | ✅ zgjedhës në Profili (E ndritshme/E errët); **e ndritshmja si parazgjedhje**, ruhet lokalisht, kontrast ≥ 4.5:1 |
 | Përshëndetja e Ballinës | ✅ sipas orës së Kosovës: 03:00–10:59 Mirëmëngjesi, 11:00–17:59 Mirëdita, 18:00–02:59 Mirëmbrëma; ndryshimi i orës dimër/verë automatik |
 | SSE emergjenca (194) | ✅ funksionon pa LLM |
 | Eksport + fshirje llogarie | ✅ të provuara (përfshirë 401 pas fshirjes) |
-| Chat me LLM + `annex_a --llm` | ⏳ çelësi u vendos; OpenAI kthen 429 `insufficient_quota` — duhen kredi API |
+| Chat me LLM, triazh dhe kujtesa | ✅ me Gemini `gemini-3.5-flash-lite`; E2E: përgjigje, kartë triazhi, propozim + konfirmim kujtese (200), bllokim guardrail |
+| Aneksi A — me LLM | ✅ 7 KALON / 0 DËSHTON / 13 PUNË (13 rastet kërkojnë vlerësim klinik) |
 | Test ngarkese k6 | ⏳ k6 nuk është instaluar |
 
 Pas një restartimi të Windows-it, nisja bëhet me dyfish-klik te
