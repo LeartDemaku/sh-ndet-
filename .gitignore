@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # .env nuk shkon kurrë në Git (edhe në nëndosje)
 .env
 .env.*
@@ -34,3 +35,23 @@ mobile/ios/Pods/
 .DS_Store
 service-account*.json
 GOOGLE_APPLICATION_CREDENTIALS*
+=======
+# Build and Release Folders
+bin-debug/
+bin-release/
+[Oo]bj/
+[Bb]in/
+
+# Other files and folders
+.settings/
+
+# Executables
+*.swf
+*.air
+*.ipa
+*.apk
+
+# Project files, i.e. `.project`, `.actionScriptProperties` and `.flexProperties`
+# should NOT be excluded as they contain compiler settings and other important
+# information for Eclipse / Flash Builder.
+>>>>>>> e8a1764e4c156dc26d1f5be202e615290287f5ce
