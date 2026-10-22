@@ -17,8 +17,8 @@ MODEL = get_settings().agent_model_name or None   # None = modeli parazgjedhur i
 # të shkurtër. Për chat-in e shëndetësisë nuk na duhet zinxhiri i gjatë i mendimit:
 # përgjigjet mbeten të shkurtra dhe të kontrolluara nga prompti + guardrail-i.
 MODEL_SETTINGS = ModelSettings(
-    max_tokens=1200,
-    timeout=20.0,
+    max_tokens=800,
+    timeout=30.0,
 )
 
 symptom_agent = Agent[AppContext](

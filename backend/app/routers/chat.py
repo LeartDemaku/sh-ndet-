@@ -18,6 +18,7 @@ from app.config import get_settings
 from app.crypto import decrypt, encrypt
 from app.db import SessionLocal
 from app.deps import get_current_user
+from app.health_fast_answers import fast_health_answer, offline_answer
 from app.models import Conversation, Message, User
 from app.ratelimit import rate_limit
 from app.redis_client import redis
@@ -155,6 +156,16 @@ async def _events(user: User, conv_id: uuid.UUID, history: list[dict], text: str
         yield sse("done", {})
         return
 
+    # 1d) Pyetje të zakonshme shëndetësore: përgjigje lokale, pa pritur modelin.
+    # Kjo shmang gabimet dhe vonesat kur ofruesi i AI është i mbingarkuar.
+    health = fast_health_answer(text)
+    if health:
+        if keep_history:
+            await _save(conv_id, "assistant", health)
+        yield sse("token", {"t": health})
+        yield sse("done", {})
+        return
+
     # 2) Agjenti (me guardrail bllokues te orchestrator-i).
     ctx = AppContext(user_id=user.id, country=user.country, locale=user.locale)
     parts: list[str] = []
@@ -179,15 +190,28 @@ async def _events(user: User, conv_id: uuid.UUID, history: list[dict], text: str
         return
     except RateLimitError as exc:
         logger.warning("agent_rate_limited: %s", exc)
-        code, message = llm_error_message(exc, user.country, get_settings().app_env)
-        yield sse("error", {"message": message, "code": code})
+        if parts:
+            if keep_history:
+                await _save(conv_id, "assistant", "".join(parts).strip())
+            yield sse("done", {})
+            return
+        message = offline_answer(text, user.country)
+        if keep_history:
+            await _save(conv_id, "assistant", message)
+        yield sse("token", {"t": message})
         yield sse("done", {})
         return
     except Exception:
         logger.exception("agent_failed")
-        num = emergency_number(user.country)
-        yield sse("error", {"message": f"Ndodhi një gabim. Provo përsëri pas pak. "
-                                       f"Nëse është urgjente, telefono {num}."})
+        if parts:
+            if keep_history:
+                await _save(conv_id, "assistant", "".join(parts).strip())
+            yield sse("done", {})
+            return
+        message = offline_answer(text, user.country)
+        if keep_history:
+            await _save(conv_id, "assistant", message)
+        yield sse("token", {"t": message})
         yield sse("done", {})
         return
 
