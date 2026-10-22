@@ -85,7 +85,9 @@ def test_fast_mode_does_not_expose_empty_rag_or_specialist_tools():
     assert "search_health_knowledge" in prompts.orchestrator_prompt(True)
 
 
-def test_gemini_reasoning_is_disabled_for_low_latency():
-    assert MODEL_SETTINGS.extra_body == {"reasoning_effort": "none"}
+def test_gemini_lite_models_do_not_send_unsupported_reasoning_parameter():
+    # Modelet lite të Gemini kthejnë 400 për "reasoning_effort"; parametri
+    # hiqet, ndërsa kufijtë e shpejtësisë dhe token-ëve mbeten të vendosur.
+    assert MODEL_SETTINGS.extra_body is None
     assert build_orchestrator(False).model_settings is MODEL_SETTINGS
-    assert _checker.model_settings.extra_body == {"reasoning_effort": "none"}
+    assert _checker.model_settings.extra_body is None
