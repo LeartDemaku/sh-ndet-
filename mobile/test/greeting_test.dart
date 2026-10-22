@@ -163,5 +163,20 @@ void main() {
         DateTime.utc(2026, 10, 25, 2),
       );
     });
+
+    test('personalizon përshëndetjen me emrin e përdoruesit', () {
+      expect(
+        personalGreeting('Mirëmëngjesi', 'Leart'),
+        'Mirëmëngjesi, Leart',
+      );
+      expect(personalGreeting('Mirëdita', '  Leart  '), 'Mirëdita, Leart');
+      expect(personalGreeting('Mirëmbrëma', 'Leart'), 'Mirëmbrëma, Leart');
+    });
+
+    test('pa emër mbetet përshëndetja e përgjithshme', () {
+      expect(personalGreeting('Mirëdita', null), 'Mirëdita');
+      expect(personalGreeting('Mirëdita', ''), 'Mirëdita');
+      expect(personalGreeting('Mirëdita', '   '), 'Mirëdita');
+    });
   });
 }

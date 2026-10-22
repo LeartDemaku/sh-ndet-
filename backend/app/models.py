@@ -25,6 +25,8 @@ class User(Base):
     id: Mapped[uuid.UUID] = pk()
     email: Mapped[str] = mapped_column(String(320), unique=True, index=True)
     password_hash: Mapped[str] = mapped_column(String(255))
+    first_name: Mapped[str | None] = mapped_column(String(80))
+    last_name: Mapped[str | None] = mapped_column(String(80))
     country: Mapped[str] = mapped_column(String(2), default="XK")
     locale: Mapped[str] = mapped_column(String(5), default="sq")
     tz: Mapped[str] = mapped_column(String(40), default="Europe/Belgrade")

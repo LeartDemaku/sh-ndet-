@@ -3,7 +3,7 @@ import math
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
 from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -25,11 +25,21 @@ CONSENT_VERSION = "2026-10"
 
 
 class RegisterIn(BaseModel):
+    first_name: str = Field(min_length=1, max_length=80)
+    last_name: str = Field(min_length=1, max_length=80)
     email: EmailStr
     password: str = Field(min_length=10, max_length=128)
     country: str = Field(default="XK", min_length=2, max_length=2)
     accept_terms: bool
     accept_health_data: bool          # pëlqim i veçantë, jo i kombinuar me kushtet
+
+    @field_validator("first_name", "last_name")
+    @classmethod
+    def _clean_name(cls, value: str) -> str:
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("Emri dhe mbiemri janë të detyrueshëm.")
+        return cleaned
 
 
 class LoginIn(BaseModel):
@@ -124,6 +134,8 @@ async def register(body: RegisterIn) -> dict:
         user = User(
             email=email,
             password_hash=hash_password(body.password),
+            first_name=body.first_name.strip(),
+            last_name=body.last_name.strip(),
             country=body.country.upper(),
         )
         db.add(user)

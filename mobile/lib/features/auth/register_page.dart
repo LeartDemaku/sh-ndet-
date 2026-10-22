@@ -18,8 +18,11 @@ class RegisterPage extends ConsumerStatefulWidget {
 
 class _RegisterPageState extends ConsumerState<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
+  final _firstName = TextEditingController();
+  final _lastName = TextEditingController();
   final _email = TextEditingController();
   final _password = TextEditingController();
+  final _confirm = TextEditingController();
   bool _terms = false;
   bool _health = false;
   bool _obscure = true;
@@ -28,9 +31,50 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
 
   @override
   void dispose() {
+    _firstName.dispose();
+    _lastName.dispose();
     _email.dispose();
     _password.dispose();
+    _confirm.dispose();
     super.dispose();
+  }
+
+  String? _validateFirstName(String? value) {
+    final name = value?.trim() ?? '';
+    if (name.isEmpty) return 'Shkruaj emrin.';
+    if (name.length > 80) return 'Emri është shumë i gjatë.';
+    return null;
+  }
+
+  String? _validateLastName(String? value) {
+    final name = value?.trim() ?? '';
+    if (name.isEmpty) return 'Shkruaj mbiemrin.';
+    if (name.length > 80) return 'Mbiemri është shumë i gjatë.';
+    return null;
+  }
+
+  String? _validateEmail(String? value) {
+    final email = value?.trim() ?? '';
+    if (email.isEmpty) return 'Shkruaj emailin.';
+    final valid = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email);
+    return valid ? null : 'Email i pasaktë.';
+  }
+
+  String? _validatePassword(String? value) {
+    final password = value ?? '';
+    if (password.isEmpty) return 'Shkruaj fjalëkalimin.';
+    if (password.length < 10) {
+      return 'Fjalëkalimi duhet të ketë të paktën 10 shenja.';
+    }
+    if (password.length > 128) return 'Fjalëkalimi është shumë i gjatë.';
+    return null;
+  }
+
+  String? _validateConfirmation(String? value) {
+    final confirmation = value ?? '';
+    if (confirmation.isEmpty) return 'Konfirmo fjalëkalimin.';
+    if (confirmation != _password.text) return 'Fjalëkalimet nuk përputhen.';
+    return null;
   }
 
   int get _strength {
@@ -55,6 +99,8 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
       final result = await ref
           .read(meApiProvider)
           .register(
+            firstName: _firstName.text.trim(),
+            lastName: _lastName.text.trim(),
             email: _email.text.trim(),
             password: _password.text,
             acceptTerms: _terms,
@@ -97,9 +143,40 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
               _FormError(message: _error!),
               const SizedBox(height: Gap.m),
             ],
+            Text('Emri', style: text.labelLarge),
+            const SizedBox(height: Gap.s),
+            TextFormField(
+              key: const Key('register-first-name'),
+              controller: _firstName,
+              textInputAction: TextInputAction.next,
+              textCapitalization: TextCapitalization.words,
+              autofillHints: const [AutofillHints.givenName],
+              decoration: const InputDecoration(
+                hintText: 'Emri yt',
+                prefixIcon: Icon(Icons.person_outline_rounded),
+              ),
+              validator: _validateFirstName,
+            ),
+            const SizedBox(height: Gap.m),
+            Text('Mbiemri', style: text.labelLarge),
+            const SizedBox(height: Gap.s),
+            TextFormField(
+              key: const Key('register-last-name'),
+              controller: _lastName,
+              textInputAction: TextInputAction.next,
+              textCapitalization: TextCapitalization.words,
+              autofillHints: const [AutofillHints.familyName],
+              decoration: const InputDecoration(
+                hintText: 'Mbiemri yt',
+                prefixIcon: Icon(Icons.badge_outlined),
+              ),
+              validator: _validateLastName,
+            ),
+            const SizedBox(height: Gap.m),
             Text('Email', style: text.labelLarge),
             const SizedBox(height: Gap.s),
             TextFormField(
+              key: const Key('register-email'),
               controller: _email,
               keyboardType: TextInputType.emailAddress,
               textInputAction: TextInputAction.next,
@@ -108,18 +185,16 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                 hintText: 'emri@example.com',
                 prefixIcon: Icon(Icons.mail_outline_rounded),
               ),
-              validator: (v) =>
-                  (v == null || !v.contains('@') || !v.contains('.'))
-                  ? 'Email i pasaktë.'
-                  : null,
+              validator: _validateEmail,
             ),
             const SizedBox(height: Gap.m),
             Text('Fjalëkalimi', style: text.labelLarge),
             const SizedBox(height: Gap.s),
             TextFormField(
+              key: const Key('register-password'),
               controller: _password,
               obscureText: _obscure,
-              textInputAction: TextInputAction.done,
+              textInputAction: TextInputAction.next,
               autofillHints: const [AutofillHints.newPassword],
               onChanged: (_) => setState(() {}),
               decoration: InputDecoration(
@@ -137,14 +212,27 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   ),
                 ),
               ),
-              validator: (v) => (v == null || v.length < 10)
-                  ? 'Fjalëkalimi duhet të ketë të paktën 10 shenja.'
-                  : null,
+              validator: _validatePassword,
             ),
             const SizedBox(height: Gap.s),
             _PasswordStrength(
               score: _strength,
               hasValue: _password.text.isNotEmpty,
+            ),
+            const SizedBox(height: Gap.m),
+            Text('Konfirmimi i fjalëkalimit', style: text.labelLarge),
+            const SizedBox(height: Gap.s),
+            TextFormField(
+              key: const Key('register-confirm-password'),
+              controller: _confirm,
+              obscureText: _obscure,
+              textInputAction: TextInputAction.done,
+              autofillHints: const [AutofillHints.newPassword],
+              decoration: const InputDecoration(
+                hintText: 'Përsërit fjalëkalimin',
+                prefixIcon: Icon(Icons.lock_reset_rounded),
+              ),
+              validator: _validateConfirmation,
             ),
             const SizedBox(height: Gap.l),
             Text('Pëlqimet', style: text.labelLarge),

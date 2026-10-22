@@ -97,6 +97,7 @@ $passwd = 'TestFjalekalim123!'
 Write-Host ""
 Write-Host "2) Regjistrimi, kodi i emailit dhe autentikimi"
 $reg = Invoke-Api POST '/v1/auth/register' @{
+    first_name = 'Test'; last_name = 'User'
     email = $email; password = $passwd; country = 'XK'
     accept_terms = $true; accept_health_data = $true
 }
@@ -107,6 +108,7 @@ Check 'asnje token para verifikimit' (-not $regJson.access_token)
 Check 'email_sent=false per @example.com' ($regJson.email_sent -eq $false)
 
 $dup = Invoke-Api POST '/v1/auth/register' @{
+    first_name = 'Test'; last_name = 'User'
     email = $email; password = $passwd; country = 'XK'
     accept_terms = $true; accept_health_data = $true
 }
@@ -139,6 +141,13 @@ $me = Invoke-Api GET '/v1/me' $null $token
 Check 'GET /v1/me -> 200' ($me.Status -eq 200) $me.Content
 $meJson = $me.Content | ConvertFrom-Json
 Check 'email i sakte' ($meJson.profile.email -eq $email) $meJson.profile.email
+Check 'emri i sakte' ($meJson.profile.first_name -eq 'Test') $meJson.profile.first_name
+Check 'mbiemri i sakte' ($meJson.profile.last_name -eq 'User') $meJson.profile.last_name
+$namePatch = Invoke-Api PATCH '/v1/me' @{ first_name = 'Testi'; last_name = 'Ndryshuar' } $token
+Check 'PATCH /v1/me per emrin -> 200' ($namePatch.Status -eq 200) $namePatch.Content
+$meAfterName = Invoke-Api GET '/v1/me' $null $token
+$meNameJson = $meAfterName.Content | ConvertFrom-Json
+Check 'emri i ri u ruajt' ($meNameJson.profile.first_name -eq 'Testi') $meNameJson.profile.first_name
 Check 'pelqimi terms i dhene' ([bool]($meJson.consents | Where-Object { $_.kind -eq 'terms' -and $_.granted }))
 Check 'pelqimi health_data i dhene' ([bool]($meJson.consents | Where-Object { $_.kind -eq 'health_data' -and $_.granted }))
 
@@ -211,6 +220,7 @@ Write-Host ""
 Write-Host "6) Izolimi mes perdoruesve"
 $emailB = "test-b-$stamp@example.com"
 $regB = Invoke-Api POST '/v1/auth/register' @{
+    first_name = 'Test'; last_name = 'User B'
     email = $emailB; password = $passwd; country = 'XK'
     accept_terms = $true; accept_health_data = $true
 }
@@ -228,11 +238,33 @@ $expB = Invoke-Api GET '/v1/me/export' $null $tokenB
 $eB = $expB.Content | ConvertFrom-Json
 Check 'B nuk sheh te dhenat e A' (@($eB.conversations).Count -eq 0) ("count=" + @($eB.conversations).Count)
 
+# ---------------------------------------------------------------
+Write-Host ""
+Write-Host "7) Fshirja e bisedave dhe kategorive te vecanta"
+$convCount = @($e2.conversations).Count
+$crossDel = Invoke-Api DELETE "/v1/me/conversations/$convA" $null $tokenB
+Check 'B nuk mund te fshije biseden e A -> 404' ($crossDel.Status -eq 404) ("status=" + $crossDel.Status)
+
+$delOne = Invoke-Api DELETE "/v1/me/conversations/$convA" $null $token
+Check 'A fshin nje bisede -> 200' ($delOne.Status -eq 200) $delOne.Content
+$expOne = Invoke-Api GET '/v1/me/export' $null $token
+$eOne = $expOne.Content | ConvertFrom-Json
+Check 'biseda u hoq nga eksporti' (@($eOne.conversations).Count -eq ($convCount - 1)) ("para=$convCount pas=" + @($eOne.conversations).Count)
+
+$delAll = Invoke-Api DELETE '/v1/me/conversations' $null $token
+Check 'A fshin te gjitha bisedat -> 200' ($delAll.Status -eq 200) $delAll.Content
+$expAll = Invoke-Api GET '/v1/me/export' $null $token
+$eAll = $expAll.Content | ConvertFrom-Json
+Check 'nuk mbeti asnje bisede' (@($eAll.conversations).Count -eq 0) ("count=" + @($eAll.conversations).Count)
+
+$delMeds = Invoke-Api DELETE '/v1/me/medications' $null $token
+Check 'A fshin te gjitha ilacet -> 200' ($delMeds.Status -eq 200) $delMeds.Content
+
 Invoke-Api DELETE '/v1/me' @{ confirm = $true } $tokenB | Out-Null
 
 # ---------------------------------------------------------------
 Write-Host ""
-Write-Host "7) Fshirja e llogarise (e drejta per t'u harruar)"
+Write-Host "8) Fshirja e llogarise (e drejta per t'u harruar)"
 if ($KeepUser) {
     Write-Host "  [SKIP]  -KeepUser u dha" -ForegroundColor Yellow
 } else {

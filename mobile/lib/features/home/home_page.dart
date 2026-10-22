@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/api/me_providers.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/time/kosovo_time.dart';
 import '../../core/widgets/brand_mark.dart';
@@ -20,6 +21,17 @@ class HomePage extends ConsumerWidget {
     final text = Theme.of(context).textTheme;
     final p = context.palette;
     final meds = ref.watch(medicationsProvider);
+    final firstName = ref.watch(meProvider).maybeWhen(
+      data: (data) {
+        final profile = data['profile'];
+        if (profile is Map) {
+          final name = '${profile['first_name'] ?? ''}'.trim();
+          if (name.isNotEmpty) return name;
+        }
+        return null;
+      },
+      orElse: () => null,
+    );
 
     return Scaffold(
       backgroundColor: p.background,
@@ -31,7 +43,7 @@ class HomePage extends ConsumerWidget {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(Gap.m, Gap.s, Gap.m, 120),
               children: [
-                _Hero(),
+                _Hero(firstName: firstName),
                 const SizedBox(height: Gap.l),
                 Row(
                   children: [
@@ -150,7 +162,8 @@ class HomePage extends ConsumerWidget {
                               style: text.labelLarge,
                             ),
                             Text(
-                              'Janë të enkriptuara. Mund t’i eksportosh ose t’i fshish te Profili.',
+                              'Të enkriptuara. Te Profili i shikon, eksporton ose '
+                              'fshin bisedat dhe ilaçet veçmas; llogarinë e fshin veçmas.',
                               style: text.labelSmall,
                             ),
                           ],
@@ -169,6 +182,10 @@ class HomePage extends ConsumerWidget {
 }
 
 class _Hero extends StatelessWidget {
+  const _Hero({this.firstName});
+
+  final String? firstName;
+
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
@@ -200,6 +217,7 @@ class _Hero extends StatelessWidget {
           ),
           const SizedBox(height: Gap.l),
           _Greeting(
+            firstName: firstName,
             style: text.displaySmall?.copyWith(
               color: Colors.white,
               fontSize: 30,
@@ -280,8 +298,9 @@ class _Hero extends StatelessWidget {
 /// Ndjek saktësisht kufijtë 03:00, 11:00 dhe 18:00 (edhe në ditët e
 /// ndryshimit të orës) dhe rifreskohet kur aplikacioni kthehet në plan të parë.
 class _Greeting extends StatefulWidget {
-  const _Greeting({this.style});
+  const _Greeting({this.firstName, this.style});
 
+  final String? firstName;
   final TextStyle? style;
 
   @override
@@ -295,9 +314,15 @@ class _GreetingState extends State<_Greeting> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
-    _text = kosovoGreeting();
+    _text = personalGreeting(kosovoGreeting(), widget.firstName);
     _scheduleNext();
     WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didUpdateWidget(covariant _Greeting oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.firstName != widget.firstName) _refresh();
   }
 
   void _scheduleNext() {
@@ -313,7 +338,7 @@ class _GreetingState extends State<_Greeting> with WidgetsBindingObserver {
   }
 
   void _refresh() {
-    final next = kosovoGreeting();
+    final next = personalGreeting(kosovoGreeting(), widget.firstName);
     if (mounted && next != _text) setState(() => _text = next);
   }
 

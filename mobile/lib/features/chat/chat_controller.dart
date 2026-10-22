@@ -177,6 +177,42 @@ class ChatController extends Notifier<ChatState> {
 
   void setOffline(bool value) => state = state.copyWith(offline: value);
 
+  /// Rihap një bisedë nga historiku dhe vazhdon me të njëjtin ID.
+  void openConversation({
+    required String conversationId,
+    required List<ChatMessage> messages,
+  }) {
+    _sub?.cancel();
+    _buffer.clear();
+    state = ChatState(
+      messages: List<ChatMessage>.unmodifiable(messages),
+      conversationId: conversationId,
+    );
+  }
+
+  /// Pastron bisedën aktuale nëse ajo sapo u fshi.
+  void discardConversation(String conversationId) {
+    if (state.conversationId == conversationId) {
+      _sub?.cancel();
+      _buffer.clear();
+      state = const ChatState();
+    }
+  }
+
+  /// Pastron çdo bisedë pas fshirjes së të gjitha bisedave.
+  void discardAllConversations() {
+    _sub?.cancel();
+    _buffer.clear();
+    state = const ChatState();
+  }
+
+  /// Nis një bisedë të re pa fshirë historikun në server.
+  void startNewConversation() {
+    _sub?.cancel();
+    _buffer.clear();
+    state = const ChatState();
+  }
+
   void _onEvent(ChatEvent event) {
     switch (event.name) {
       case 'meta':

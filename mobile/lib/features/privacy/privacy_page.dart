@@ -1,19 +1,16 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/api/me_api.dart';
+import '../../core/api/me_providers.dart';
 import '../../core/api/providers.dart';
 import '../../core/auth/auth_session.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/emergency_action.dart';
 import '../../core/widgets/theme_mode_selector.dart';
-
-final meProvider = FutureProvider<Map<String, dynamic>>((ref) async {
-  final api = ref.watch(meApiProvider);
-  return api.fetchMe();
-});
+import '../chat/chat_page.dart';
+import '../meds/meds_providers.dart';
 
 /// Ekrani 6 · Profili / Privatësia.
 /// "Pëlqimet, eksporti dhe fshirja e të dhënave, të arritshme lehtë."
@@ -25,8 +22,6 @@ class PrivacyPage extends ConsumerStatefulWidget {
 }
 
 class _PrivacyPageState extends ConsumerState<PrivacyPage> {
-  bool _exporting = false;
-
   /// Çelësat: i pari (historiku) është ON si parazgjedhje dhe ulet kur tërhiqet.
   bool _history = true;
   bool _analytics = false;
@@ -59,11 +54,19 @@ class _PrivacyPageState extends ConsumerState<PrivacyPage> {
       });
     });
 
-    final email = me.maybeWhen(
-      data: (data) =>
-          (data['profile'] as Map<String, dynamic>)['email']?.toString(),
+    final profile = me.maybeWhen(
+      data: (data) {
+        final raw = data['profile'];
+        return raw is Map ? Map<String, dynamic>.from(raw) : null;
+      },
       orElse: () => null,
     );
+    final email = profile?['email']?.toString();
+    final firstName = '${profile?['first_name'] ?? ''}'.trim();
+    final lastName = '${profile?['last_name'] ?? ''}'.trim();
+    final name = [firstName, lastName]
+        .where((part) => part.isNotEmpty)
+        .join(' ');
 
     return Scaffold(
       appBar: AppBar(
@@ -73,7 +76,12 @@ class _PrivacyPageState extends ConsumerState<PrivacyPage> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(Gap.m, Gap.s, Gap.m, 120),
         children: [
-          _ProfileHeader(email: email, loading: me.isLoading),
+          _ProfileHeader(
+            name: name.isEmpty ? null : name,
+            email: email,
+            loading: me.isLoading,
+            onEditName: me.isLoading ? null : _editName,
+          ),
           const SizedBox(height: Gap.l),
           _SectionCard(
             title: 'Pamja',
@@ -135,22 +143,30 @@ class _PrivacyPageState extends ConsumerState<PrivacyPage> {
             icon: Icons.folder_outlined,
             children: [
               _tile(
-                icon: Icons.download_rounded,
-                title: 'Eksporto të dhënat e mia',
-                subtitle: 'Merr një kopje të plotë të informacionit.',
-                trailing: _exporting
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : null,
-                onTap: _exporting ? null : _export,
+                icon: Icons.folder_open_rounded,
+                title: 'Eksporto dhe menaxho të dhënat',
+                subtitle:
+                    'Shiko historikun, ilaçet dhe pëlqimet; fshi veçmas çdo bisedë ose kategori.',
+                onTap: () => context.push('/profile/data'),
               ),
-              const Divider(height: 1, indent: Gap.m, endIndent: Gap.m),
+            ],
+          ),
+          const SizedBox(height: Gap.m),
+          _SectionCard(
+            title: 'Fshirja e llogarisë',
+            icon: Icons.warning_amber_rounded,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(Gap.m, 0, Gap.m, Gap.s),
+                child: Text(
+                  'Fshirja e llogarisë është veprim i veçantë nga eksporti. '
+                  'Ajo fshin llogarinë dhe të dhënat e saj përgjithmonë.',
+                  style: text.bodyMedium,
+                ),
+              ),
               _tile(
                 icon: Icons.delete_outline_rounded,
-                title: 'Fshi llogarinë dhe të dhënat',
+                title: 'Fshi llogarinë',
                 subtitle: 'Fshirje e përhershme, me konfirmim.',
                 danger: true,
                 onTap: _confirmDelete,
@@ -204,61 +220,115 @@ class _PrivacyPageState extends ConsumerState<PrivacyPage> {
     }
   }
 
-  Future<void> _export() async {
-    setState(() => _exporting = true);
-    try {
-      final data = await ref.read(meApiProvider).exportData();
-      if (!mounted) return;
-      await showModalBottomSheet<void>(
-        context: context,
-        showDragHandle: true,
-        isScrollControlled: true,
-        builder: (sheetContext) => DraggableScrollableSheet(
-          expand: false,
-          initialChildSize: 0.7,
-          builder: (sheetContext, scrollController) => ListView(
-            controller: scrollController,
-            padding: const EdgeInsets.all(Gap.l),
+  Future<void> _editName() async {
+    final profile = ref.read(meProvider).maybeWhen(
+      data: (data) {
+        final raw = data['profile'];
+        return raw is Map ? Map<String, dynamic>.from(raw) : null;
+      },
+      orElse: () => null,
+    );
+    final first = TextEditingController(
+      text: '${profile?['first_name'] ?? ''}',
+    );
+    final last = TextEditingController(text: '${profile?['last_name'] ?? ''}');
+    final formKey = GlobalKey<FormState>();
+
+    final save = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Emri dhe mbiemri'),
+        content: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                'Eksporti i të dhënave',
-                style: Theme.of(sheetContext).textTheme.titleMedium,
-              ),
-              const SizedBox(height: Gap.s),
-              Text(
-                'Ky është i gjithë informacioni që kemi për ty. Mund ta ruash ose ta dërgosh diku.',
-                style: Theme.of(sheetContext).textTheme.bodyMedium,
+              TextFormField(
+                controller: first,
+                autofocus: true,
+                textCapitalization: TextCapitalization.words,
+                textInputAction: TextInputAction.next,
+                decoration: const InputDecoration(
+                  labelText: 'Emri',
+                  prefixIcon: Icon(Icons.person_outline_rounded),
+                ),
+                validator: (value) {
+                  final name = value?.trim() ?? '';
+                  if (name.isEmpty) return 'Shkruaj emrin.';
+                  if (name.length > 80) return 'Emri është shumë i gjatë.';
+                  return null;
+                },
               ),
               const SizedBox(height: Gap.m),
-              Container(
-                padding: const EdgeInsets.all(Gap.m),
-                decoration: BoxDecoration(
-                  color: sheetContext.palette.surfaceSunken,
-                  borderRadius: BorderRadius.circular(12),
+              TextFormField(
+                controller: last,
+                textCapitalization: TextCapitalization.words,
+                textInputAction: TextInputAction.done,
+                decoration: const InputDecoration(
+                  labelText: 'Mbiemri',
+                  prefixIcon: Icon(Icons.badge_outlined),
                 ),
-                child: Text(
-                  const JsonEncoder.withIndent('  ').convert(data),
-                  style: TextStyle(
-                    fontFamily: 'monospace',
-                    fontSize: 12,
-                    color: sheetContext.palette.ink,
-                  ),
-                ),
+                validator: (value) {
+                  final name = value?.trim() ?? '';
+                  if (name.isEmpty) return 'Shkruaj mbiemrin.';
+                  if (name.length > 80) return 'Mbiemri është shumë i gjatë.';
+                  return null;
+                },
               ),
             ],
           ),
         ),
-      );
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Anulo'),
+          ),
+          FilledButton(
+            onPressed: () {
+              if (formKey.currentState?.validate() ?? false) {
+                Navigator.of(dialogContext).pop(true);
+              }
+            },
+            child: const Text('Ruaj'),
+          ),
+        ],
+      ),
+    );
+
+    if (save != true || !mounted) {
+      first.dispose();
+      last.dispose();
+      return;
+    }
+
+    try {
+      await ref
+          .read(meApiProvider)
+          .updateProfileNames(
+            firstName: first.text.trim(),
+            lastName: last.text.trim(),
+          );
+      ref.invalidate(meProvider);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Emri u ruajt.')),
+        );
+      }
+    } on MeApiException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.userMessage)));
+      }
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Nuk u përgatit eksporti. Provo përsëri pas pak.'),
-          ),
+          const SnackBar(content: Text('Nuk u ruajt emri. Provo përsëri.')),
         );
       }
     } finally {
-      if (mounted) setState(() => _exporting = false);
+      first.dispose();
+      last.dispose();
     }
   }
 
@@ -284,6 +354,9 @@ class _PrivacyPageState extends ConsumerState<PrivacyPage> {
     );
     if (ok != true || !mounted) return;
 
+    ref.read(chatControllerProvider.notifier).startNewConversation();
+    ref.invalidate(meProvider);
+    ref.invalidate(medicationsProvider);
     await ref.read(secureStoreProvider).clear();
     ref.read(authSessionProvider).setAuthenticated(false);
     if (mounted) context.go('/onboarding');
@@ -342,6 +415,9 @@ class _PrivacyPageState extends ConsumerState<PrivacyPage> {
 
     try {
       await ref.read(meApiProvider).deleteAccount();
+      ref.read(chatControllerProvider.notifier).startNewConversation();
+      ref.invalidate(meProvider);
+      ref.invalidate(medicationsProvider);
       await ref.read(secureStoreProvider).clear();
       ref.read(authSessionProvider).setAuthenticated(false);
       if (!mounted) return;
@@ -418,13 +494,25 @@ class _PrivacyPageState extends ConsumerState<PrivacyPage> {
 }
 
 class _ProfileHeader extends StatelessWidget {
-  const _ProfileHeader({required this.email, required this.loading});
+  const _ProfileHeader({
+    required this.name,
+    required this.email,
+    required this.loading,
+    required this.onEditName,
+  });
+
+  final String? name;
   final String? email;
   final bool loading;
+  final VoidCallback? onEditName;
 
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
+    final title = name ?? email ?? 'Llogaria ime';
+    final subtitle = name != null
+        ? (email ?? 'Llogari e sigurt · Shëndet+')
+        : 'Shto emrin për përshëndetje personale.';
     return Container(
       padding: const EdgeInsets.all(Gap.l),
       decoration: BoxDecoration(
@@ -460,21 +548,29 @@ class _ProfileHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  loading ? 'Po ngarkohet…' : (email ?? 'Llogaria ime'),
+                  loading ? 'Po ngarkohet…' : title,
                   style: text.titleMedium?.copyWith(color: Colors.white),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Llogari e sigurt · Shëndet+',
+                  subtitle,
                   style: text.bodyMedium?.copyWith(
                     color: Colors.white.withValues(alpha: 0.72),
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
           ),
+          if (onEditName != null)
+            IconButton(
+              tooltip: name == null ? 'Shto emrin' : 'Ndrysho emrin',
+              onPressed: onEditName,
+              icon: const Icon(Icons.edit_outlined, color: Colors.white),
+            ),
         ],
       ),
     );

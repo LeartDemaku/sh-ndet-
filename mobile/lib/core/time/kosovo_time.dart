@@ -30,6 +30,14 @@ String kosovoGreeting([DateTime? instant]) {
   return 'Mirëmbrëma';
 }
 
+/// Shton emrin e përdoruesit vetëm kur ai është i disponueshëm.
+/// Pa emër, përshëndetja mbetet e përgjithshme (pa të dhëna statike).
+String personalGreeting(String greeting, String? firstName) {
+  final name = firstName?.trim();
+  if (name == null || name.isEmpty) return greeting;
+  return '$greeting, $name';
+}
+
 /// Orari i saktë (UTC) kur përshëndetja ndryshon herën tjetër.
 ///
 /// Përdoret nga Ballina që teksti të ndryshojë pikërisht në 03:00, 11:00 ose

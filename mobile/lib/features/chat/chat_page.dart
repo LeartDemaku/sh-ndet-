@@ -88,7 +88,16 @@ class _ChatPageState extends ConsumerState<ChatPage> {
             ),
           ],
         ),
-        actions: const [EmergencyAction()],
+        actions: [
+          if (state.conversationId != null)
+            IconButton(
+              tooltip: 'Bisedë e re',
+              onPressed: () =>
+                  ref.read(chatControllerProvider.notifier).startNewConversation(),
+              icon: const Icon(Icons.add_comment_outlined),
+            ),
+          const EmergencyAction(),
+        ],
       ),
       body: Center(
         child: ConstrainedBox(

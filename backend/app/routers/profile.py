@@ -6,7 +6,7 @@ import uuid
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import delete, select, update
 
 from app.crypto import decrypt
@@ -33,9 +33,21 @@ PURGE_AFTER_DAYS = 30
 
 
 class ProfileIn(BaseModel):
+    first_name: str | None = Field(default=None, min_length=1, max_length=80)
+    last_name: str | None = Field(default=None, min_length=1, max_length=80)
     country: str | None = Field(default=None, min_length=2, max_length=2)
     locale: str | None = Field(default=None, min_length=2, max_length=5)
     tz: str | None = Field(default=None, min_length=1, max_length=40)
+
+    @field_validator("first_name", "last_name")
+    @classmethod
+    def _clean_optional_name(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("Emri nuk mund të jetë bosh.")
+        return cleaned
 
 
 class ConsentBody(BaseModel):
@@ -55,6 +67,8 @@ async def read_me(user: User = Depends(get_current_user)) -> dict:
     return {
         "profile": {
             "email": user.email,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
             "country": user.country,
             "locale": user.locale,
             "tz": user.tz,
@@ -112,6 +126,30 @@ async def list_medications(user: User = Depends(get_current_user)) -> dict:
     }
 
 
+@router.delete("/me/medications")
+async def delete_all_medications(user: User = Depends(get_current_user)) -> dict:
+    """Fshin të gjitha ilaçet e përdoruesit dhe kujtesat e tyre."""
+    async with SessionLocal() as db:
+        med_ids = (await db.scalars(
+            select(Medication.id).where(Medication.user_id == user.id)
+        )).all()
+        if med_ids:
+            await db.execute(
+                delete(Reminder).where(
+                    Reminder.user_id == user.id,
+                    Reminder.medication_id.in_(med_ids),
+                )
+            )
+            await db.execute(
+                delete(Medication).where(Medication.user_id == user.id)
+            )
+            await db.commit()
+
+    if med_ids:
+        await audit(user.id, "medication.delete_all", "medication", count=len(med_ids))
+    return {"status": "deleted", "count": len(med_ids)}
+
+
 @router.delete("/me/medications/{medication_id}")
 async def delete_medication(
     medication_id: uuid.UUID,
@@ -148,6 +186,62 @@ async def delete_medication(
         medication_id=str(medication_id),
     )
     return {"status": "deleted", "id": str(medication_id)}
+
+
+@router.delete("/me/conversations")
+async def delete_all_conversations(user: User = Depends(get_current_user)) -> dict:
+    """Fshin të gjitha bisedat e përdoruesit (mesazhet shkojnë me to)."""
+    async with SessionLocal() as db:
+        conv_ids = (await db.scalars(
+            select(Conversation.id).where(Conversation.user_id == user.id)
+        )).all()
+        if conv_ids:
+            await db.execute(
+                delete(Message).where(Message.conversation_id.in_(conv_ids))
+            )
+            await db.execute(
+                delete(Conversation).where(Conversation.user_id == user.id)
+            )
+            await db.commit()
+
+    if conv_ids:
+        await audit(
+            user.id,
+            "conversation.delete_all",
+            "conversation",
+            count=len(conv_ids),
+        )
+    return {"status": "deleted", "count": len(conv_ids)}
+
+
+@router.delete("/me/conversations/{conversation_id}")
+async def delete_conversation(
+    conversation_id: uuid.UUID,
+    user: User = Depends(get_current_user),
+) -> dict:
+    """Fshin një bisedë vetëm nëse i përket përdoruesit aktual."""
+    async with SessionLocal() as db:
+        conversation = await db.scalar(
+            select(Conversation).where(
+                Conversation.id == conversation_id,
+                Conversation.user_id == user.id,
+            )
+        )
+        if conversation is None:
+            raise HTTPException(404, "Biseda nuk u gjet.")
+        await db.execute(
+            delete(Message).where(Message.conversation_id == conversation.id)
+        )
+        await db.delete(conversation)
+        await db.commit()
+
+    await audit(
+        user.id,
+        "conversation.delete",
+        "conversation",
+        conversation_id=str(conversation_id),
+    )
+    return {"status": "deleted", "id": str(conversation_id)}
 
 
 @router.get("/me/export")
@@ -194,6 +288,8 @@ async def export_me(user: User = Depends(get_current_user)) -> dict:
         "profile": {
             "id": str(user.id),
             "email": user.email,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
             "country": user.country,
             "locale": user.locale,
             "tz": user.tz,
@@ -261,6 +357,8 @@ async def delete_me(body: DeleteBody, user: User = Depends(get_current_user)) ->
         # 2) Pa identifikues: email dhe fjalëkalim anonymizohen
         target.email = f"erased-{uuid.uuid4().hex[:16]}@erased.invalid"
         target.password_hash = secrets.token_urlsafe(48)
+        target.first_name = None
+        target.last_name = None
 
         # 3) Përmbajtja personale fshihet menjëherë (tabelat fqinje me CASCADE)
         await db.execute(delete(Conversation).where(Conversation.user_id == user.id))

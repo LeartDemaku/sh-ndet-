@@ -66,6 +66,42 @@ class MeApi {
 
   Future<Map<String, dynamic>> exportData() => _get('/v1/me/export');
 
+  Future<void> updateProfileNames({
+    required String firstName,
+    required String lastName,
+  }) async {
+    final resp = await _client.patch(
+      _uri('/v1/me'),
+      headers: await _headers(),
+      body: jsonEncode({'first_name': firstName, 'last_name': lastName}),
+    );
+    if (resp.statusCode != 200) throw _error(resp);
+  }
+
+  Future<void> deleteConversation(String id) async {
+    final resp = await _client.delete(
+      _uri('/v1/me/conversations/${Uri.encodeComponent(id)}'),
+      headers: await _headers(),
+    );
+    if (resp.statusCode != 200) throw _error(resp);
+  }
+
+  Future<void> deleteAllConversations() async {
+    final resp = await _client.delete(
+      _uri('/v1/me/conversations'),
+      headers: await _headers(),
+    );
+    if (resp.statusCode != 200) throw _error(resp);
+  }
+
+  Future<void> deleteAllMedications() async {
+    final resp = await _client.delete(
+      _uri('/v1/me/medications'),
+      headers: await _headers(),
+    );
+    if (resp.statusCode != 200) throw _error(resp);
+  }
+
   Future<void> setConsent(String kind, {required bool granted}) async {
     final resp = await _client.put(
       _uri('/v1/me/consents/$kind'),
@@ -102,6 +138,8 @@ class MeApi {
 
   /// Regjistrimi nuk kthen më token: llogaria aktivizohet pas kodit të emailit.
   Future<RegisterResult> register({
+    required String firstName,
+    required String lastName,
     required String email,
     required String password,
     required bool acceptTerms,
@@ -111,6 +149,8 @@ class MeApi {
       _uri('/v1/auth/register'),
       headers: await _headers(),
       body: jsonEncode({
+        'first_name': firstName,
+        'last_name': lastName,
         'email': email,
         'password': password,
         'country': 'XK',

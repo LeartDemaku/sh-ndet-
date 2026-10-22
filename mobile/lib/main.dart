@@ -15,6 +15,7 @@ import 'features/home/home_page.dart';
 import 'features/meds/meds_page.dart';
 import 'features/onboarding/onboarding_page.dart';
 import 'features/onboarding/splash_page.dart';
+import 'features/privacy/data_page.dart';
 import 'features/privacy/privacy_page.dart';
 
 /// Shella me shiritin e poshtëm: Ballina · Chat · Ilaçet · Profili.
@@ -119,6 +120,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         },
       ),
       GoRoute(path: '/emergency', builder: (c, s) => const EmergencyPage()),
+      GoRoute(path: '/profile/data', builder: (c, s) => const DataPage()),
       StatefulShellRoute.indexedStack(
         builder: (context, state, shell) =>
             AppShell(location: state.uri.path, child: shell),
