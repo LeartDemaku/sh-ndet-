@@ -81,7 +81,7 @@ class Settings(BaseSettings):
         if self.llm_agent_model:
             return self.llm_agent_model
         default = {
-            "gemini": "gemini-flash-latest",
+            "gemini": "gemini-3.5-flash",
             "groq": "llama-3.3-70b-versatile",
         }.get(self.provider)
         return default or self.agent_model or self.openai_agent_model
@@ -91,7 +91,7 @@ class Settings(BaseSettings):
         if self.llm_guard_model:
             return self.llm_guard_model
         default = {
-            "gemini": "gemini-flash-lite-latest",
+            "gemini": "gemini-3-flash-preview",
             "groq": "llama-3.1-8b-instant",
         }.get(self.provider)
         return default or self.guard_model or self.openai_guard_model

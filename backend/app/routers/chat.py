@@ -22,7 +22,7 @@ from app.models import Conversation, Message, User
 from app.ratelimit import rate_limit
 from app.redis_client import redis
 from app.safety.emergency import (
-    EmergencyResult, check_emergency, emergency_message, emergency_number,
+    EmergencyResult, check_emergency, emergency_message, emergency_number, normalize,
 )
 from app.services.consents import is_revoked
 
@@ -37,6 +37,27 @@ class ChatIn(BaseModel):
 
 def sse(event: str, data: dict) -> str:
     return f"event: {event}\ndata: {json.dumps(data, ensure_ascii=False)}\n\n"
+
+
+_GREETINGS = {
+    "pershendetje", "tung", "tungjatjeta", "hello", "hi", "hey",
+    "miremengjes", "miredita", "mirembrema", "ciao",
+    "pershendetje si je", "pershendetje si jeni", "tung si je",
+}
+
+
+def _fast_reply(text: str) -> str | None:
+    """Përgjigje e menjëhershme për biseda shoqërore, pa thirrur modelin.
+
+    Kjo shmang pritjen 2-20 sekonda për një "Përshëndetje" të thjeshtë. Nuk
+    përdoret për asnjë mesazh me përmbajtje shëndetësore.
+    """
+    norm = normalize(text)
+    if norm in _GREETINGS:
+        return "Përshëndetje! Si mund të ndihmoj sot?"
+    if norm in {"faleminderit", "faleminderit shume", "thanks", "thank you"}:
+        return "Me kënaqësi! Nëse ke pyetje tjetër, jam këtu."
+    return None
 
 
 def llm_error_message(exc: Exception, country: str, app_env: str) -> tuple[str, str]:
@@ -122,6 +143,15 @@ async def _events(user: User, conv_id: uuid.UUID, history: list[dict], text: str
         if keep_history:
             await _save(conv_id, "assistant", msg, safety="safe_mode")
         yield sse("blocked", {"message": msg, "safe_mode": True})
+        yield sse("done", {})
+        return
+
+    # 1c) Biseda shoqërore: përgjigje e menjëhershme, pa model.
+    fast = _fast_reply(text)
+    if fast:
+        if keep_history:
+            await _save(conv_id, "assistant", fast)
+        yield sse("token", {"t": fast})
         yield sse("done", {})
         return
 

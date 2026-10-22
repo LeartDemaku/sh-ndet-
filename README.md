@@ -95,17 +95,19 @@ LLM_API_KEY=...
 ```
 
 Mjaftojnë këto dy rreshta; URL-ja dhe modelet kanë vlera parazgjedhur
-(`gemini-flash-latest` / `gemini-flash-lite-latest`). Për Groq përdor
+(`gemini-3.5-flash` / `gemini-3-flash-preview`). Për Groq përdor
 `LLM_PROVIDER=groq`; modelet parazgjedhur janë `llama-3.3-70b-versatile` /
 `llama-3.1-8b-instant`. Mund t'i mbivendosësh me `LLM_BASE_URL`,
 `LLM_AGENT_MODEL` dhe `LLM_GUARD_MODEL`.
 Këto janë për **testim lokal**; për prodhim zgjidh një plan me DPA dhe politika
 përpunimi të dhënash shëndetësore. Pas ndryshimit të `.env`, rinis API-n.
 
-Në këtë mjedis u provua `gemini-3.5-flash-lite`. Kuota falas e Gemini është e
-kufizuar (rreth 15 kërkesa/minutë për këtë model); nëse biseda është shumë e
-shpejtë, API kthen një mesazh të kontrolluar "AI i zënë" në vend që të shembet.
-Për përdorim real me shumë përdorues nevojitet plan me pagesë dhe DPA.
+Në këtë mjedis u provua `gemini-3.5-flash` me `reasoning_effort=none`. Pa këtë
+parametër modeli mendon 20-60 sekonda për një përgjigje të shkurtër; me të,
+përgjigja e parë vjen në 1-5 sekonda. Kuota falas e Gemini mbetet e kufizuar
+(rreth 15 kërkesa/minutë); nëse biseda është shumë e shpejtë, API kthen një
+mesazh të kontrolluar "AI i zënë" në vend që të shembet. Për përdorim real me
+shumë përdorues nevojitet plan me pagesë dhe DPA.
 
 ### RAG-u dhe shpejtësia e chat-it
 
@@ -116,8 +118,9 @@ Triazhi, kujtesat dhe ilaçet vazhdojnë të punojnë direkt.
 
 Kur të ingjestohet përmbajtje e rishikuar klinikisht, vendos `RAG_ENABLED=true`
 te `backend/.env` dhe rinis API-n. Në testin lokal të 22.10.2026, me Gemini
-`gemini-3.5-flash-lite`, përgjigja e parë erdhi në ~2,4 s, triazhi në ~3,7 s dhe
-kujtesa në ~2,7 s (pa gabime 400/429 në atë seancë).
+`gemini-3.5-flash` + `reasoning_effort=none`, përshëndetja u përgjigj në
+~0,8 s, përgjigja e përgjithshme në ~4,8 s, kujtesa në ~4,3 s dhe triazhi në
+~8,0 s (pa gabime 400/429/503 në atë seancë).
 
 ## ⚠️ Shënim për Windows: rruga e projektit
 
@@ -149,7 +152,7 @@ Në CI (GitHub Actions, rruga `/home/runner/work/...`) analyze kalon normalisht.
 |---|---|
 | PostgreSQL 16.15 + pgvector 0.8.7 + Redis 7.4 | ✅ `docker compose up -d db redis` |
 | Migrimet `0001_init` + `0002_email_verification` | ✅ 10 tabela + `alembic_version`, indeks HNSW |
-| `pytest -q` | ✅ 30 passed |
+| `pytest -q` | ✅ 34 passed |
 | Regjistrim + verifikim emaili | ✅ kod 6-shifror; llogaria aktivizohet vetëm pas verifikimit |
 | `python -m eval.annex_a --deterministic` | ✅ 4 KALON / 0 DËSHTON (2 manuale, 13 skip) |
 | Smoke end-to-end (`scripts/smoke_e2e.ps1`) | ✅ 41 OK / 0 FAIL |
@@ -161,7 +164,7 @@ Në CI (GitHub Actions, rruga `/home/runner/work/...`) analyze kalon normalisht.
 | Butoni 194 në mobil | ✅ në AppBar, jo FAB; nuk mbulon chat-in ose butonin “Dërgo” |
 | Fshirja e ilaçeve | ✅ `DELETE /v1/me/medications/{id}`; vetëm pronari, kujtesat fshihen bashkë |
 | Eksport + fshirje llogarie | ✅ të provuara (përfshirë 401 pas fshirjes) |
-| Chat me LLM, triazh dhe kujtesa | ✅ me Gemini `gemini-3.5-flash-lite`; E2E: përgjigje, kartë triazhi, propozim + konfirmim kujtese (200), bllokim guardrail |
+| Chat me LLM, triazh dhe kujtesa | ✅ me Gemini `gemini-3.5-flash` (`reasoning_effort=none`); E2E: përgjigje, kartë triazhi, propozim + konfirmim kujtese (200), bllokim guardrail |
 | Aneksi A — me LLM | ✅ 7 KALON / 0 DËSHTON / 13 PUNË (13 rastet kërkojnë vlerësim klinik) |
 | Test ngarkese k6 | ⏳ k6 nuk është instaluar |
 

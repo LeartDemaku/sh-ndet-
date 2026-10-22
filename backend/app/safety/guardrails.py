@@ -3,6 +3,7 @@ from typing import Literal
 from agents import (
     Agent,
     GuardrailFunctionOutput,
+    ModelSettings,
     RunContextWrapper,
     Runner,
     TResponseInputItem,
@@ -28,6 +29,11 @@ _checker = Agent(
     instructions=GUARD_PROMPT,
     output_type=ScopeVerdict,
     model=get_settings().guard_model_name or None,
+    model_settings=ModelSettings(
+        extra_body={"reasoning_effort": "none"},
+        max_tokens=200,
+        timeout=20.0,
+    ),
 )
 
 

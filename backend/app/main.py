@@ -30,6 +30,7 @@ async def lifespan(app: FastAPI):
                 api_key=settings.active_llm_key,
                 base_url=settings.active_llm_base_url,
                 max_retries=1,
+                timeout=20.0,
             ),
             use_for_tracing=False,
         )

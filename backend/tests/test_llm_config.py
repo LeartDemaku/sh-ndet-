@@ -1,6 +1,7 @@
 from app.agents import prompts
-from app.agents.registry import build_orchestrator
+from app.agents.registry import MODEL_SETTINGS, build_orchestrator
 from app.config import Settings
+from app.safety.guardrails import _checker
 
 
 def _settings(**overrides) -> Settings:
@@ -40,8 +41,8 @@ def test_custom_provider_uses_its_own_key_and_models():
 def test_gemini_defaults_need_only_provider_and_key():
     settings = _settings(llm_provider="gemini", llm_api_key="gm-test")
     assert settings.active_llm_base_url.endswith("/v1beta/openai/")
-    assert settings.agent_model_name == "gemini-flash-latest"
-    assert settings.guard_model_name == "gemini-flash-lite-latest"
+    assert settings.agent_model_name == "gemini-3.5-flash"
+    assert settings.guard_model_name == "gemini-3-flash-preview"
 
 
 def test_groq_defaults_need_only_provider_and_key():
@@ -82,3 +83,9 @@ def test_fast_mode_does_not_expose_empty_rag_or_specialist_tools():
     assert "search_health_knowledge" not in agent.instructions
     assert "search_health_knowledge" not in prompts.orchestrator_prompt(False)
     assert "search_health_knowledge" in prompts.orchestrator_prompt(True)
+
+
+def test_gemini_reasoning_is_disabled_for_low_latency():
+    assert MODEL_SETTINGS.extra_body == {"reasoning_effort": "none"}
+    assert build_orchestrator(False).model_settings is MODEL_SETTINGS
+    assert _checker.model_settings.extra_body == {"reasoning_effort": "none"}
