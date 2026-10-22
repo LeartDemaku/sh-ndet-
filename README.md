@@ -9,15 +9,15 @@ Udhëzues teknik / 02 · Python · FastAPI · Agents SDK · PostgreSQL · Flutte
 > mjekun. Para çdo publikimi me përdorues realë nevojiten rishikim klinik, rishikim ligjor
 > (privatësia dhe pajisjet mjekësore), test sigurie dhe pëlqimet e duhura.
 
-## Nisja me dy klikime (Windows)
+## Nisja me një klikim (Windows)
 
-Në Desktop janë krijuar dy shkurtesa:
+Në Desktop është një shkurtesë e vetme: **Shëndet+**. Kliko dy herë mbi të.
+Hapet aplikacioni në shfletues dhe një dritare e vogël kontrolli.
 
-- **Nis Shëndet+** — hap API-n dhe web-in në dy dritare, kontrollon të dyja dhe të tregon `API: OK` / `WEB: OK`. Nuk hap browser automatikisht.
-- **Ndalo Shëndet+** — mbyll API-n dhe web-in.
+Për ta ndaluar, mbyll dritaren e kontrollit ose kliko **Ndal dhe mbyll**.
+Nuk nevojitet terminal, `Ctrl+C`, `npm` apo ndonjë komandë tjetër.
 
-Nëse shkurtesat mungojnë, dy skedarët janë në rrënjën e projektit:
-`Nis-Shendet.bat` dhe `Ndalo-Shendet.bat`. Mjafton t'i klikosh dy herë.
+Në rrënjën e projektit është vetëm `Shëndet+.bat`; skriptet e vjetra u hoqën.
 
 ## Struktura
 
