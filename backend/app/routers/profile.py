@@ -24,6 +24,7 @@ from app.models import (
 )
 from app.services.audit import audit
 from app.services.consents import KNOWN_KINDS, get_consent, set_consent
+from app.services.display_name import first_name_from_email
 
 router = APIRouter(prefix="/v1", tags=["profile"])
 
@@ -55,7 +56,7 @@ async def read_me(user: User = Depends(get_current_user)) -> dict:
     return {
         "profile": {
             "email": user.email,
-            "first_name": user.first_name,
+            "first_name": user.first_name or first_name_from_email(user.email),
             "last_name": user.last_name,
             "country": user.country,
             "locale": user.locale,
@@ -276,7 +277,7 @@ async def export_me(user: User = Depends(get_current_user)) -> dict:
         "profile": {
             "id": str(user.id),
             "email": user.email,
-            "first_name": user.first_name,
+            "first_name": user.first_name or first_name_from_email(user.email),
             "last_name": user.last_name,
             "country": user.country,
             "locale": user.locale,
