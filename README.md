@@ -104,8 +104,20 @@ përpunimi të dhënash shëndetësore. Pas ndryshimit të `.env`, rinis API-n.
 
 Në këtë mjedis u provua `gemini-3.5-flash-lite`. Kuota falas e Gemini është e
 kufizuar (rreth 15 kërkesa/minutë për këtë model); nëse biseda është shumë e
-shpejtë, API kthen një mesazh të kontrolluar “AI i zënë” në vend që të shembet.
+shpejtë, API kthen një mesazh të kontrolluar "AI i zënë" në vend që të shembet.
 Për përdorim real me shumë përdorues nevojitet plan me pagesë dhe DPA.
+
+### RAG-u dhe shpejtësia e chat-it
+
+`RAG_ENABLED=false` është parazgjedhja kur baza e njohurive është bosh. Në këtë
+gjendje agjenti nuk merr mjetin e kërkimit RAG dhe as nën-agjentët specialistë,
+sepse çdo mjet shtesë kërkon një raund tjetër modeli dhe e vonon përgjigjen.
+Triazhi, kujtesat dhe ilaçet vazhdojnë të punojnë direkt.
+
+Kur të ingjestohet përmbajtje e rishikuar klinikisht, vendos `RAG_ENABLED=true`
+te `backend/.env` dhe rinis API-n. Në testin lokal të 22.10.2026, me Gemini
+`gemini-3.5-flash-lite`, përgjigja e parë erdhi në ~2,4 s, triazhi në ~3,7 s dhe
+kujtesa në ~2,7 s (pa gabime 400/429 në atë seancë).
 
 ## ⚠️ Shënim për Windows: rruga e projektit
 
@@ -131,13 +143,13 @@ Emri i produktit mbetet **Shëndet+** kudo: në API, në promptet, në bazën e 
 në UI dhe në paketën Flutter (`shendetplus`). Ndryshohet vetëm rruga në disk.
 Në CI (GitHub Actions, rruga `/home/runner/work/...`) analyze kalon normalisht.
 
-## Gjendja e verifikuar (21.10.2026)
+## Gjendja e verifikuar (22.10.2026)
 
 | Kontroll | Rezultat |
 |---|---|
 | PostgreSQL 16.15 + pgvector 0.8.7 + Redis 7.4 | ✅ `docker compose up -d db redis` |
 | Migrimet `0001_init` + `0002_email_verification` | ✅ 10 tabela + `alembic_version`, indeks HNSW |
-| `pytest -q` | ✅ 28 passed |
+| `pytest -q` | ✅ 30 passed |
 | Regjistrim + verifikim emaili | ✅ kod 6-shifror; llogaria aktivizohet vetëm pas verifikimit |
 | `python -m eval.annex_a --deterministic` | ✅ 4 KALON / 0 DËSHTON (2 manuale, 13 skip) |
 | Smoke end-to-end (`scripts/smoke_e2e.ps1`) | ✅ 41 OK / 0 FAIL |

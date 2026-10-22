@@ -33,6 +33,9 @@ class Settings(BaseSettings):
     default_country: str = "XK"
     rate_limit_per_min: int = 20
     safe_mode: bool = False            # kill switch: vetëm L0 + mesazh statik
+    # RAG-u aktivizohet vetëm pasi baza të ketë përmbajtje të rishikuar klinikisht.
+    # Kur është false, agjenti nuk merr mjete RAG/specialistësh që shtojnë vonesë.
+    rag_enabled: bool = False
 
     # ---------------------------------------------------------------
     # Verifikimi i emailit gjatë regjistrimit (faktor i dytë).

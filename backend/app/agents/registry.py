@@ -27,23 +27,34 @@ medication_agent = Agent[AppContext](
     model=MODEL,
 )
 
-orchestrator = Agent[AppContext](
-    name="Shëndet+",
-    instructions=prompts.ORCHESTRATOR_PROMPT,
-    tools=[
-        submit_triage,
-        get_my_medications,
-        propose_reminder,
-        search_health_knowledge,
-        symptom_agent.as_tool(
-            tool_name="analizo_simptomat",
-            tool_description="Strukturon simptomat dhe kthen pyetje shtesë dhe shenja alarmi.",
-        ),
-        medication_agent.as_tool(
-            tool_name="info_ilaci",
-            tool_description="Informacion i përgjithshëm për një ilaç (jo dozim).",
-        ),
-    ],
-    input_guardrails=[scope_guardrail],
-    model=MODEL,
-)
+
+def build_orchestrator(rag_enabled: bool) -> Agent[AppContext]:
+    """Agjenti kryesor.
+
+    Pa bazë njohurish të rishikuar, mjetet RAG dhe nën-agjentët thjesht shtojnë
+    disa raunde modeli para përgjigjes. Në atë rast përdoret rruga e shpejtë:
+    triazh/kujtesa/ilaçet direkt, pa kërkime bosh.
+    """
+    tools = [submit_triage, get_my_medications, propose_reminder]
+    if rag_enabled:
+        tools.extend([
+            search_health_knowledge,
+            symptom_agent.as_tool(
+                tool_name="analizo_simptomat",
+                tool_description="Strukturon simptomat dhe kthen pyetje shtesë dhe shenja alarmi.",
+            ),
+            medication_agent.as_tool(
+                tool_name="info_ilaci",
+                tool_description="Informacion i përgjithshëm për një ilaç (jo dozim).",
+            ),
+        ])
+    return Agent[AppContext](
+        name="Shëndet+",
+        instructions=prompts.orchestrator_prompt(rag_enabled),
+        tools=tools,
+        input_guardrails=[scope_guardrail],
+        model=MODEL,
+    )
+
+
+orchestrator = build_orchestrator(get_settings().rag_enabled)

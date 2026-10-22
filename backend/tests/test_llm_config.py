@@ -1,3 +1,5 @@
+from app.agents import prompts
+from app.agents.registry import build_orchestrator
 from app.config import Settings
 
 
@@ -67,3 +69,16 @@ def test_explicit_llm_models_override_provider_defaults():
 def test_provider_name_is_normalized():
     settings = _settings(llm_provider=" Gemini ")
     assert settings.provider == "gemini"
+
+
+def test_rag_is_disabled_by_default_for_fast_mode():
+    assert _settings().rag_enabled is False
+
+
+def test_fast_mode_does_not_expose_empty_rag_or_specialist_tools():
+    agent = build_orchestrator(False)
+    names = {tool.name for tool in agent.tools}
+    assert names == {"submit_triage", "get_my_medications", "propose_reminder"}
+    assert "search_health_knowledge" not in agent.instructions
+    assert "search_health_knowledge" not in prompts.orchestrator_prompt(False)
+    assert "search_health_knowledge" in prompts.orchestrator_prompt(True)
