@@ -6,7 +6,7 @@ import uuid
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
 from sqlalchemy import delete, select, update
 
 from app.crypto import decrypt
@@ -33,21 +33,9 @@ PURGE_AFTER_DAYS = 30
 
 
 class ProfileIn(BaseModel):
-    first_name: str | None = Field(default=None, min_length=1, max_length=80)
-    last_name: str | None = Field(default=None, min_length=1, max_length=80)
     country: str | None = Field(default=None, min_length=2, max_length=2)
     locale: str | None = Field(default=None, min_length=2, max_length=5)
     tz: str | None = Field(default=None, min_length=1, max_length=40)
-
-    @field_validator("first_name", "last_name")
-    @classmethod
-    def _clean_optional_name(cls, value: str | None) -> str | None:
-        if value is None:
-            return None
-        cleaned = value.strip()
-        if not cleaned:
-            raise ValueError("Emri nuk mund të jetë bosh.")
-        return cleaned
 
 
 class ConsentBody(BaseModel):

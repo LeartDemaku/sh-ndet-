@@ -66,18 +66,6 @@ class MeApi {
 
   Future<Map<String, dynamic>> exportData() => _get('/v1/me/export');
 
-  Future<void> updateProfileNames({
-    required String firstName,
-    required String lastName,
-  }) async {
-    final resp = await _client.patch(
-      _uri('/v1/me'),
-      headers: await _headers(),
-      body: jsonEncode({'first_name': firstName, 'last_name': lastName}),
-    );
-    if (resp.statusCode != 200) throw _error(resp);
-  }
-
   Future<void> deleteConversation(String id) async {
     final resp = await _client.delete(
       _uri('/v1/me/conversations/${Uri.encodeComponent(id)}'),

@@ -143,11 +143,6 @@ $meJson = $me.Content | ConvertFrom-Json
 Check 'email i sakte' ($meJson.profile.email -eq $email) $meJson.profile.email
 Check 'emri i sakte' ($meJson.profile.first_name -eq 'Test') $meJson.profile.first_name
 Check 'mbiemri i sakte' ($meJson.profile.last_name -eq 'User') $meJson.profile.last_name
-$namePatch = Invoke-Api PATCH '/v1/me' @{ first_name = 'Testi'; last_name = 'Ndryshuar' } $token
-Check 'PATCH /v1/me per emrin -> 200' ($namePatch.Status -eq 200) $namePatch.Content
-$meAfterName = Invoke-Api GET '/v1/me' $null $token
-$meNameJson = $meAfterName.Content | ConvertFrom-Json
-Check 'emri i ri u ruajt' ($meNameJson.profile.first_name -eq 'Testi') $meNameJson.profile.first_name
 Check 'pelqimi terms i dhene' ([bool]($meJson.consents | Where-Object { $_.kind -eq 'terms' -and $_.granted }))
 Check 'pelqimi health_data i dhene' ([bool]($meJson.consents | Where-Object { $_.kind -eq 'health_data' -and $_.granted }))
 

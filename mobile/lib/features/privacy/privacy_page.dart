@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/api/me_api.dart';
 import '../../core/api/me_providers.dart';
 import '../../core/api/providers.dart';
 import '../../core/auth/auth_session.dart';
@@ -61,7 +60,6 @@ class _PrivacyPageState extends ConsumerState<PrivacyPage> {
       },
       orElse: () => null,
     );
-    final email = profile?['email']?.toString();
     final firstName = '${profile?['first_name'] ?? ''}'.trim();
     final lastName = '${profile?['last_name'] ?? ''}'.trim();
     final name = [firstName, lastName]
@@ -78,9 +76,7 @@ class _PrivacyPageState extends ConsumerState<PrivacyPage> {
         children: [
           _ProfileHeader(
             name: name.isEmpty ? null : name,
-            email: email,
             loading: me.isLoading,
-            onEditName: me.isLoading ? null : _editName,
           ),
           const SizedBox(height: Gap.l),
           _SectionCard(
@@ -217,118 +213,6 @@ class _PrivacyPageState extends ConsumerState<PrivacyPage> {
           ),
         );
       }
-    }
-  }
-
-  Future<void> _editName() async {
-    final profile = ref.read(meProvider).maybeWhen(
-      data: (data) {
-        final raw = data['profile'];
-        return raw is Map ? Map<String, dynamic>.from(raw) : null;
-      },
-      orElse: () => null,
-    );
-    final first = TextEditingController(
-      text: '${profile?['first_name'] ?? ''}',
-    );
-    final last = TextEditingController(text: '${profile?['last_name'] ?? ''}');
-    final formKey = GlobalKey<FormState>();
-
-    final save = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Emri dhe mbiemri'),
-        content: Form(
-          key: formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: first,
-                autofocus: true,
-                textCapitalization: TextCapitalization.words,
-                textInputAction: TextInputAction.next,
-                decoration: const InputDecoration(
-                  labelText: 'Emri',
-                  prefixIcon: Icon(Icons.person_outline_rounded),
-                ),
-                validator: (value) {
-                  final name = value?.trim() ?? '';
-                  if (name.isEmpty) return 'Shkruaj emrin.';
-                  if (name.length > 80) return 'Emri është shumë i gjatë.';
-                  return null;
-                },
-              ),
-              const SizedBox(height: Gap.m),
-              TextFormField(
-                controller: last,
-                textCapitalization: TextCapitalization.words,
-                textInputAction: TextInputAction.done,
-                decoration: const InputDecoration(
-                  labelText: 'Mbiemri',
-                  prefixIcon: Icon(Icons.badge_outlined),
-                ),
-                validator: (value) {
-                  final name = value?.trim() ?? '';
-                  if (name.isEmpty) return 'Shkruaj mbiemrin.';
-                  if (name.length > 80) return 'Mbiemri është shumë i gjatë.';
-                  return null;
-                },
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Anulo'),
-          ),
-          FilledButton(
-            onPressed: () {
-              if (formKey.currentState?.validate() ?? false) {
-                Navigator.of(dialogContext).pop(true);
-              }
-            },
-            child: const Text('Ruaj'),
-          ),
-        ],
-      ),
-    );
-
-    if (save != true || !mounted) {
-      first.dispose();
-      last.dispose();
-      return;
-    }
-
-    try {
-      await ref
-          .read(meApiProvider)
-          .updateProfileNames(
-            firstName: first.text.trim(),
-            lastName: last.text.trim(),
-          );
-      ref.invalidate(meProvider);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Emri u ruajt.')),
-        );
-      }
-    } on MeApiException catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(e.userMessage)));
-      }
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Nuk u ruajt emri. Provo përsëri.')),
-        );
-      }
-    } finally {
-      first.dispose();
-      last.dispose();
     }
   }
 
@@ -494,25 +378,15 @@ class _PrivacyPageState extends ConsumerState<PrivacyPage> {
 }
 
 class _ProfileHeader extends StatelessWidget {
-  const _ProfileHeader({
-    required this.name,
-    required this.email,
-    required this.loading,
-    required this.onEditName,
-  });
+  const _ProfileHeader({required this.name, required this.loading});
 
   final String? name;
-  final String? email;
   final bool loading;
-  final VoidCallback? onEditName;
 
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
-    final title = name ?? email ?? 'Llogaria ime';
-    final subtitle = name != null
-        ? (email ?? 'Llogari e sigurt · Shëndet+')
-        : 'Shto emrin për përshëndetje personale.';
+    final title = name ?? 'Llogaria ime';
     return Container(
       padding: const EdgeInsets.all(Gap.l),
       decoration: BoxDecoration(
@@ -555,7 +429,7 @@ class _ProfileHeader extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  subtitle,
+                  'Llogari e sigurt · Shëndet+',
                   style: text.bodyMedium?.copyWith(
                     color: Colors.white.withValues(alpha: 0.72),
                   ),
@@ -565,12 +439,6 @@ class _ProfileHeader extends StatelessWidget {
               ],
             ),
           ),
-          if (onEditName != null)
-            IconButton(
-              tooltip: name == null ? 'Shto emrin' : 'Ndrysho emrin',
-              onPressed: onEditName,
-              icon: const Icon(Icons.edit_outlined, color: Colors.white),
-            ),
         ],
       ),
     );

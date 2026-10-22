@@ -88,24 +88,4 @@ void main() {
     api.dispose();
   });
 
-  test('updateProfileNames dërgon PATCH me emrin dhe mbiemrin', () async {
-    late http.Request captured;
-    final api = MeApi(
-      baseUrl: 'http://api.test',
-      tokenProvider: () async => 'token-test',
-      client: MockClient((request) async {
-        captured = request;
-        return http.Response('{"status":"updated"}', 200);
-      }),
-    );
-
-    await api.updateProfileNames(firstName: 'Leart', lastName: 'Demaku');
-
-    final body = jsonDecode(captured.body) as Map<String, dynamic>;
-    expect(captured.method, 'PATCH');
-    expect(captured.url.path, '/v1/me');
-    expect(body['first_name'], 'Leart');
-    expect(body['last_name'], 'Demaku');
-    api.dispose();
-  });
 }

@@ -3,10 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/api/me_api.dart';
+import '../../core/api/me_providers.dart';
 import '../../core/api/providers.dart';
 import '../../core/auth/auth_session.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/auth_scaffold.dart';
+import '../chat/chat_page.dart';
+import '../meds/meds_providers.dart';
 
 /// Hyrje për përdoruesit që kanë llogari.
 /// Hapi 5 i udhëzimit: identiteti — regjistrim, hyrje, JWT.
@@ -46,6 +49,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           .read(meApiProvider)
           .login(email: _email.text.trim(), password: _password.text);
       await ref.read(secureStoreProvider).saveToken(token);
+      ref.invalidate(meProvider);
+      ref.invalidate(medicationsProvider);
+      ref.read(chatControllerProvider.notifier).startNewConversation();
       ref.read(authSessionProvider).setAuthenticated(true);
       if (!mounted) return;
       context.go('/home');

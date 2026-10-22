@@ -381,10 +381,6 @@ class _DataPageState extends ConsumerState<DataPage> {
                         children: [
                           _InfoRow(label: 'Emri', value: _displayName),
                           _InfoRow(
-                            label: 'Email',
-                            value: '${_profile['email'] ?? '—'}',
-                          ),
-                          _InfoRow(
                             label: 'Shteti',
                             value: '${_profile['country'] ?? '—'}',
                           ),
