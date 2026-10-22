@@ -74,6 +74,8 @@ njerëzore (klinike, ligjore, DPO) që kërkon lista e mësipërme.
 | Eksport + fshirje llogarie | ✅ përfshirë 401 pas fshirjes | `smoke_e2e.ps1` hapi 7 |
 | SSE emergjenca (194) | ✅ pa LLM; vetëm linjat zyrtare | `smoke_e2e.ps1` hapi 3 |
 | Numrat në UI dhe API | ✅ ambulanca 194, policia 192, zjarrfikësit 193 | `emergency_page.dart`, `emergency.py` |
+| Pozicioni i butonit 194 në mobil | ✅ në AppBar; nuk mbulon chat-in dhe butonin “Dërgo” | `emergency_action.dart`, `emergency_navigation_test.dart` |
+| Fshirja e ilaçeve nga paneli | ✅ vetëm pronari; ilaçi dhe kujtesat fshihen (200), tjetri merr 404 | `DELETE /v1/me/medications/{id}` + test live + `meds_page_test.dart` |
 | Regjistrim + verifikim emaili | ✅ llogaria aktivizohet vetëm pas kodit 6-shifror | `smoke_e2e.ps1` hapi 2 + browser E2E |
 | Kill switch (`SAFE_MODE=true`) | ✅ vetëm L0 + mesazh statik | instancë testuese në portën 8001 |
 | Migrimet + `vector` + HNSW | ✅ `0001_init` + `0002_email_verification` | `alembic upgrade head` |
@@ -81,7 +83,7 @@ njerëzore (klinike, ligjore, DPO) që kërkon lista e mësipërme.
 | Test ngarkese k6 | ⏳ k6 mungon | `loadtest/chat.js` |
 | `pytest -q` | ✅ 30 passed | |
 | `flutter analyze` | ✅ No issues found | |
-| `flutter test` | ✅ 35/35 | |
+| `flutter test` | ✅ 38/38 | |
 | Pamja light/dark | ✅ zgjedhësi te Profili; e ndritshmja si parazgjedhje, ruhet pas rihapjes | `theme_test.dart` · `theme_mode.dart` |
 | Përshëndetja e Ballinës | ✅ sipas orës së Kosovës (03–11, 11–18, 18–03), me DST automatik | `greeting_test.dart` · `kosovo_time.dart` |
 

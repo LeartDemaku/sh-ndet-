@@ -154,10 +154,12 @@ Në CI (GitHub Actions, rruga `/home/runner/work/...`) analyze kalon normalisht.
 | `python -m eval.annex_a --deterministic` | ✅ 4 KALON / 0 DËSHTON (2 manuale, 13 skip) |
 | Smoke end-to-end (`scripts/smoke_e2e.ps1`) | ✅ 41 OK / 0 FAIL |
 | `flutter analyze` | ✅ No issues found |
-| `flutter test` | ✅ 35/35 |
+| `flutter test` | ✅ 38/38 |
 | Pamja light/dark | ✅ zgjedhës në Profili (E ndritshme/E errët); **e ndritshmja si parazgjedhje**, ruhet lokalisht, kontrast ≥ 4.5:1 |
 | Përshëndetja e Ballinës | ✅ sipas orës së Kosovës: 03:00–10:59 Mirëmëngjesi, 11:00–17:59 Mirëdita, 18:00–02:59 Mirëmbrëma; ndryshimi i orës dimër/verë automatik |
 | SSE emergjenca (194) | ✅ funksionon pa LLM |
+| Butoni 194 në mobil | ✅ në AppBar, jo FAB; nuk mbulon chat-in ose butonin “Dërgo” |
+| Fshirja e ilaçeve | ✅ `DELETE /v1/me/medications/{id}`; vetëm pronari, kujtesat fshihen bashkë |
 | Eksport + fshirje llogarie | ✅ të provuara (përfshirë 401 pas fshirjes) |
 | Chat me LLM, triazh dhe kujtesa | ✅ me Gemini `gemini-3.5-flash-lite`; E2E: përgjigje, kartë triazhi, propozim + konfirmim kujtese (200), bllokim guardrail |
 | Aneksi A — me LLM | ✅ 7 KALON / 0 DËSHTON / 13 PUNË (13 rastet kërkojnë vlerësim klinik) |

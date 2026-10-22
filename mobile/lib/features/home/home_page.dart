@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/time/kosovo_time.dart';
 import '../../core/widgets/brand_mark.dart';
+import '../../core/widgets/emergency_action.dart';
 import '../meds/meds_providers.dart';
 
 /// Ekrani 2 · Ballina.
@@ -194,24 +195,7 @@ class _Hero extends StatelessWidget {
               const SizedBox(width: Gap.s),
               const BrandName(onDark: true, fontSize: 19),
               const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Text(
-                  'Asistent AI, jo mjek',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
+              const EmergencyAction(),
             ],
           ),
           const SizedBox(height: Gap.l),
@@ -226,6 +210,14 @@ class _Hero extends StatelessWidget {
             'Si ndihesh sot?',
             style: text.bodyLarge?.copyWith(
               color: Colors.white.withValues(alpha: 0.82),
+            ),
+          ),
+          const SizedBox(height: Gap.xs),
+          Text(
+            'Asistent AI, jo mjek',
+            style: text.labelSmall?.copyWith(
+              color: Colors.white.withValues(alpha: 0.65),
+              letterSpacing: 0.2,
             ),
           ),
           const SizedBox(height: Gap.l),

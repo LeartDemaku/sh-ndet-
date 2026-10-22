@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/brand_mark.dart';
+import '../../core/widgets/emergency_action.dart';
 import 'chat_controller.dart';
 import 'triage_card.dart';
 
@@ -87,6 +88,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
             ),
           ],
         ),
+        actions: const [EmergencyAction()],
       ),
       body: Center(
         child: ConstrainedBox(

@@ -12,7 +12,16 @@ from sqlalchemy import delete, select, update
 from app.crypto import decrypt
 from app.db import SessionLocal
 from app.deps import get_current_user
-from app.models import AuditLog, Consent, Conversation, Device, Medication, Message, User
+from app.models import (
+    AuditLog,
+    Consent,
+    Conversation,
+    Device,
+    Medication,
+    Message,
+    Reminder,
+    User,
+)
 from app.services.audit import audit
 from app.services.consents import KNOWN_KINDS, get_consent, set_consent
 
@@ -80,8 +89,6 @@ async def correct_me(body: ProfileIn, user: User = Depends(get_current_user)) ->
 @router.get("/me/medications")
 async def list_medications(user: User = Depends(get_current_user)) -> dict:
     """Lista e ilaçeve aktive me oraret e kujtesave (Ekrani 5 · Ilaçet)."""
-    from app.models import Reminder
-
     async with SessionLocal() as db:
         meds = (await db.scalars(
             select(Medication)
@@ -105,11 +112,47 @@ async def list_medications(user: User = Depends(get_current_user)) -> dict:
     }
 
 
+@router.delete("/me/medications/{medication_id}")
+async def delete_medication(
+    medication_id: uuid.UUID,
+    user: User = Depends(get_current_user),
+) -> dict:
+    """Fshin një ilaç të përdoruesit dhe kujtesat e tij.
+
+    Fshirja është e menjëhershme dhe e pakthyeshme; ilaçi duhet t'i përkasë
+    përdoruesit që e kërkon. Kujtesat fshihen para ilaçit, edhe pse FK-ja ka
+    ON DELETE CASCADE, që sjellja të mos varet nga konfigurimi i bazës.
+    """
+    async with SessionLocal() as db:
+        medication = await db.scalar(
+            select(Medication).where(
+                Medication.id == medication_id,
+                Medication.user_id == user.id,
+            )
+        )
+        if medication is None:
+            raise HTTPException(404, "Ilaçi nuk u gjet.")
+        await db.execute(
+            delete(Reminder).where(
+                Reminder.medication_id == medication.id,
+                Reminder.user_id == user.id,
+            )
+        )
+        await db.delete(medication)
+        await db.commit()
+
+    await audit(
+        user.id,
+        "medication.delete",
+        "medication",
+        medication_id=str(medication_id),
+    )
+    return {"status": "deleted", "id": str(medication_id)}
+
+
 @router.get("/me/export")
 async def export_me(user: User = Depends(get_current_user)) -> dict:
     """E drejta e qasjes dhe portabilitetit: JSON me profilin, pëlqimet, ilaçet, bisedat."""
-    from app.models import Reminder
-
     async with SessionLocal() as db:
         consents = (await db.scalars(
             select(Consent).where(Consent.user_id == user.id))).all()

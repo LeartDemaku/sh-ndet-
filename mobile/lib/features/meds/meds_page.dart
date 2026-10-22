@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/api/me_api.dart';
+import '../../core/api/providers.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/widgets/emergency_action.dart';
 import '../chat/chat_page.dart';
 import 'meds_providers.dart';
 
@@ -35,6 +37,7 @@ class MedsPage extends ConsumerWidget {
             onPressed: () => ref.invalidate(medicationsProvider),
             icon: const Icon(Icons.refresh_rounded),
           ),
+          const EmergencyAction(),
         ],
       ),
       body: Center(
@@ -70,7 +73,12 @@ class MedsPage extends ConsumerWidget {
                             for (final m in items)
                               for (final t
                                   in (m['times'] as List).cast<String>())
-                                _MedTile(time: t, name: '${m['name']}'),
+                                _MedTile(
+                                  time: t,
+                                  name: '${m['name']}',
+                                  onDelete: () =>
+                                      _confirmDelete(context, ref, m),
+                                ),
                           ],
                         ),
                 ),
@@ -118,6 +126,60 @@ class MedsPage extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _confirmDelete(
+    BuildContext context,
+    WidgetRef ref,
+    Map<String, dynamic> medication,
+  ) async {
+    final id = '${medication['id'] ?? ''}'.trim();
+    if (id.isEmpty) return;
+    final name = '${medication['name'] ?? 'ilaçi'}';
+    final p = context.palette;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Fshij ilaçin?'),
+        content: Text(
+          '“$name” dhe të gjitha kujtesat e tij do të fshihen përgjithmonë. '
+          'Ky veprim nuk mund të kthehet.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Anulo'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: p.emergency,
+              foregroundColor: ShendetColors.onEmergency,
+            ),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Fshij'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+
+    try {
+      await ref.read(meApiProvider).deleteMedication(id);
+      ref.invalidate(medicationsProvider);
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Ilaçi u fshi.')));
+    } on MeApiException catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(e.userMessage)));
+    } catch (_) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Nuk u fshi ilaçi. Provo përsëri.')),
+      );
+    }
   }
 }
 
@@ -202,9 +264,14 @@ class _TodaySummary extends StatelessWidget {
 }
 
 class _MedTile extends StatelessWidget {
-  const _MedTile({required this.time, required this.name});
+  const _MedTile({
+    required this.time,
+    required this.name,
+    required this.onDelete,
+  });
   final String time;
   final String name;
+  final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -263,6 +330,17 @@ class _MedTile extends StatelessWidget {
                 iconSize: 28,
                 icon: const Icon(Icons.check_circle_outline_rounded),
                 color: p.selfCare,
+              ),
+            ),
+            Semantics(
+              button: true,
+              label: 'Fshij $name',
+              child: IconButton(
+                onPressed: onDelete,
+                tooltip: 'Fshij ilaçin',
+                iconSize: 24,
+                icon: const Icon(Icons.delete_outline_rounded),
+                color: p.emergency,
               ),
             ),
           ],

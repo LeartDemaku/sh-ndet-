@@ -55,6 +55,15 @@ class MeApi {
     return List<Map<String, dynamic>>.from(data['medications'] as List);
   }
 
+  /// Fshirja e një ilaçi dhe e të gjitha kujtesave të tij.
+  Future<void> deleteMedication(String id) async {
+    final resp = await _client.delete(
+      _uri('/v1/me/medications/${Uri.encodeComponent(id)}'),
+      headers: await _headers(),
+    );
+    if (resp.statusCode != 200) throw _error(resp);
+  }
+
   Future<Map<String, dynamic>> exportData() => _get('/v1/me/export');
 
   Future<void> setConsent(String kind, {required bool granted}) async {

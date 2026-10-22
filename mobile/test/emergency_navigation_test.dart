@@ -4,8 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:shendetplus/core/theme/app_theme.dart';
+import 'package:shendetplus/core/widgets/emergency_action.dart';
 import 'package:shendetplus/features/emergency/emergency_page.dart';
-import 'package:shendetplus/main.dart';
 
 GoRouter _router({String initialLocation = '/home'}) => GoRouter(
   initialLocation: initialLocation,
@@ -13,8 +13,8 @@ GoRouter _router({String initialLocation = '/home'}) => GoRouter(
     GoRoute(
       path: '/home',
       builder: (context, state) => Scaffold(
+        appBar: AppBar(actions: const [EmergencyAction()]),
         body: const Center(child: Text('Ballina test')),
-        floatingActionButton: const EmergencyFab(),
       ),
     ),
     GoRoute(

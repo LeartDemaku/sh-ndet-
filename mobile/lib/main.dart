@@ -17,25 +17,6 @@ import 'features/onboarding/onboarding_page.dart';
 import 'features/onboarding/splash_page.dart';
 import 'features/privacy/privacy_page.dart';
 
-/// Butoni i emergjencës: i arritshëm me një prekje nga ÇDO ekran.
-class EmergencyFab extends StatelessWidget {
-  const EmergencyFab({super.key});
-
-  @override
-  Widget build(BuildContext context) => FloatingActionButton.extended(
-    backgroundColor: ShendetColors.emergency,
-    foregroundColor: ShendetColors.onEmergency,
-    elevation: 4,
-    tooltip: 'Emergjencë, telefono 194',
-    onPressed: () => context.push('/emergency'),
-    icon: const Icon(Icons.emergency_rounded),
-    label: const Text(
-      '194',
-      style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
-    ),
-  );
-}
-
 /// Shella me shiritin e poshtëm: Ballina · Chat · Ilaçet · Profili.
 class AppShell extends StatelessWidget {
   const AppShell({super.key, required this.child, required this.location});
@@ -52,7 +33,6 @@ class AppShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Scaffold(
     body: child,
-    floatingActionButton: const EmergencyFab(),
     bottomNavigationBar: DecoratedBox(
       decoration: BoxDecoration(
         border: Border(top: BorderSide(color: context.palette.line)),

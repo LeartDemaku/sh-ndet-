@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/api/providers.dart';
 import '../../core/auth/auth_session.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/widgets/emergency_action.dart';
 import '../../core/widgets/theme_mode_selector.dart';
 
 final meProvider = FutureProvider<Map<String, dynamic>>((ref) async {
@@ -65,7 +66,10 @@ class _PrivacyPageState extends ConsumerState<PrivacyPage> {
     );
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Profili')),
+      appBar: AppBar(
+        title: const Text('Profili'),
+        actions: const [EmergencyAction()],
+      ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(Gap.m, Gap.s, Gap.m, 120),
         children: [
