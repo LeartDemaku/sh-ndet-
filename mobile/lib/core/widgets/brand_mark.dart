@@ -37,22 +37,29 @@ class BrandMark extends StatelessWidget {
             Icon(
               Icons.favorite_rounded,
               size: size * 0.48,
-              color: onDark ? ShendetColors.primary : Colors.white,
+              color: Colors.white,
             ),
             Positioned(
-              right: size * 0.13,
-              bottom: size * 0.13,
+              right: size * 0.12,
+              bottom: size * 0.12,
               child: Container(
-                width: size * 0.30,
-                height: size * 0.30,
+                width: size * 0.31,
+                height: size * 0.31,
                 decoration: BoxDecoration(
-                  color: onDark ? ShendetColors.primary : Colors.white,
+                  color: ShendetColors.emergency,
                   shape: BoxShape.circle,
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x33000000),
+                      blurRadius: 8,
+                      offset: Offset(0, 3),
+                    ),
+                  ],
                 ),
                 child: Icon(
                   Icons.add_rounded,
                   size: size * 0.22,
-                  color: onDark ? Colors.white : ShendetColors.primary,
+                  color: Colors.white,
                 ),
               ),
             ),

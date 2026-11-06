@@ -27,6 +27,7 @@ if (-not $mutex.WaitOne(0)) {
 }
 
 $splash = $null
+$brandIconPath = Join-Path $root 'mobile\web\app_icon.ico'
 if (-not $Headless) {
     $splash = New-Object System.Windows.Forms.Form
     $splash.Text = 'Shëndet+'
@@ -37,6 +38,9 @@ if (-not $Headless) {
     $splash.MinimizeBox = $false
     $splash.TopMost = $true
     $splash.BackColor = [System.Drawing.Color]::FromArgb(247, 250, 249)
+    if (Test-Path $brandIconPath) {
+        $splash.Icon = [System.Drawing.Icon]::ExtractAssociatedIcon($brandIconPath)
+    }
 
     $splashTitle = New-Object System.Windows.Forms.Label
     $splashTitle.Text = 'Po nis Shëndet+...'
@@ -186,6 +190,9 @@ try {
     $form.MaximizeBox = $false
     $form.MinimizeBox = $true
     $form.BackColor = [System.Drawing.Color]::FromArgb(247, 250, 249)
+    if (Test-Path $brandIconPath) {
+        $form.Icon = [System.Drawing.Icon]::ExtractAssociatedIcon($brandIconPath)
+    }
 
     $title = New-Object System.Windows.Forms.Label
     $title.Text = 'Shëndet+ është hapur'
